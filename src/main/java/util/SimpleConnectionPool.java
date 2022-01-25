@@ -1,6 +1,8 @@
 package util;
 
 import exceptions.ConnectionFailedException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -16,26 +18,25 @@ import java.util.LinkedList;
 public class SimpleConnectionPool implements ConnectionPool {
 
     private final String databaseUrl;
-    private final String port;
     private final String username;
     private final String password;
     private final int baseConnections;
 
-    private final LinkedList<Connection> freeConnections = new LinkedList<Connection>();
+    private final static Logger logger = LogManager.getLogger(SimpleConnectionPool.class);
+
+    private final LinkedList<Connection> freeConnections = new LinkedList<>();
 
     /**
      * Constructor for SimpleConnectionPool. The object maintains a number of connections
      * that are multiples of baseConnections.
      *
      * @param databaseUrl        the url to the database url
-     * @param port               the port the database uses
      * @param username           username to access the database
      * @param password           password to access the database
      * @param baseConnections    the base number of connections to maintain
      */
-    public SimpleConnectionPool(String databaseUrl, String port, String username, String password, int baseConnections) {
+    public SimpleConnectionPool(String databaseUrl, String username, String password, int baseConnections) {
         this.databaseUrl = databaseUrl;
-        this.port = port;
         this.username = username;
         this.password = password;
         this.baseConnections = baseConnections;
@@ -51,10 +52,11 @@ public class SimpleConnectionPool implements ConnectionPool {
     public void connect() throws ConnectionFailedException {
         try {
             for (int i = 0; i < this.baseConnections; i++) {
-                freeConnections.add(DriverManager.getConnection(this.databaseUrl + ":"+ this.port, this.username, this.password));
+                freeConnections.add(DriverManager.getConnection(this.databaseUrl, this.username, this.password));
             }
         } catch (SQLException e) {
-            // log
+            logger.error("SQL Exception when trying to connect to database, got the following message: " + e.getMessage());
+
             throw new ConnectionFailedException();
         }
     }
@@ -72,7 +74,9 @@ public class SimpleConnectionPool implements ConnectionPool {
             connect();
         }
 
-        return freeConnections.getFirst();
+        Connection connection = freeConnections.getFirst();
+        freeConnections.remove(connection);
+        return connection;
     }
 
     /**
@@ -92,8 +96,12 @@ public class SimpleConnectionPool implements ConnectionPool {
             try {
                 conn.close();
             } catch (SQLException e) {
-                // log
+                logger.error("SQL Exception trying to shutdown the connection pool, got message: " + e.getMessage());
             }
         }
+    }
+
+    public int getConnectionCount() {
+        return this.freeConnections.size();
     }
 }

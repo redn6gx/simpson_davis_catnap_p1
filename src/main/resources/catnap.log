@@ -1,0 +1,1 @@
+ERROR | 2022-01-25 16:43:28 | [main] util.SimpleConnectionPool (SimpleConnectionPool.java:58) - SQL Exception when trying to connect to database, got the following message: No suitable driver found for 
