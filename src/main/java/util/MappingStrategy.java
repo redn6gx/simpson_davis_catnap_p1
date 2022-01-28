@@ -1,11 +1,11 @@
 package util;
 
-public interface MappingStrategy {
+public interface MappingStrategy<T> {
     public String createTable(Class clazz);
     public String dropTable(Class clazz);
-    public String insert(Class clazz, int id);
+    public String insert(T instanceObject);
     public String get(Class clazz, int id);
     public String getAll(Class clazz);
-    public String update(Class clazz, int id);
+    public String update(T instanceObject);
     public String delete(Class clazz, int id);
 }

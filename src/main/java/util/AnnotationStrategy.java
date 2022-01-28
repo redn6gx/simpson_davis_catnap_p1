@@ -9,26 +9,11 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.*;
 
-
-//TODO
-//change to string builders
-
-public class AnnotationStrategy implements MappingStrategy{
+public class AnnotationStrategy<T> implements MappingStrategy<T>{
     @Override
     public String createTable(Class clazz){
         StringBuilder query = new StringBuilder("CREATE TABLE ");
-
-        Object tableName = null;
-        try{
-            Annotation annotation = clazz.getAnnotation(Entity.class);
-            Method m = annotation.annotationType().getMethod("name");
-            tableName = m.invoke(annotation);
-        } catch(NoSuchMethodException | java.lang.IllegalAccessException | java.lang.reflect.InvocationTargetException e){
-            System.out.println(e.getMessage());
-        }
-
-        String name = !tableName.equals("none") ? tableName + "" : clazz.getSimpleName();
-        query.append(name).append(" (\n");
+        query.append( getTableName(clazz)).append(" (\n");
 
         Properties props = new Properties();
         try{
@@ -69,8 +54,11 @@ public class AnnotationStrategy implements MappingStrategy{
         return String.valueOf(query);
     }
     @Override
-    public String insert(Class clazz, int id){
-        StringBuilder query = new StringBuilder();
+    public String insert(T instanceObject){
+        StringBuilder query = new StringBuilder("INSERT INTO ");
+        Class clazz = instanceObject.getClass();
+        query.append(getTableName(clazz)).append(" VALUES (");
+
         return String.valueOf(query);
     }
     @Override
@@ -84,7 +72,7 @@ public class AnnotationStrategy implements MappingStrategy{
         return String.valueOf(query);
     }
     @Override
-    public String update(Class clazz, int id){
+    public String update(T instanceObject){
         StringBuilder query = new StringBuilder();
         return String.valueOf(query);
     }
@@ -92,5 +80,19 @@ public class AnnotationStrategy implements MappingStrategy{
     public String delete(Class clazz, int id){
         StringBuilder query = new StringBuilder();
         return String.valueOf(query);
+    }
+
+    //Helper Method
+    private String getTableName(Class clazz){
+        Object tableName = null;
+        try{
+            Annotation annotation = clazz.getAnnotation(Entity.class);
+            Method m = annotation.annotationType().getMethod("name");
+            tableName = m.invoke(annotation);
+        } catch(NoSuchMethodException | java.lang.IllegalAccessException | java.lang.reflect.InvocationTargetException e){
+            System.out.println(e.getMessage());
+        }
+
+        return !tableName.equals("none") ? tableName + "" : clazz.getSimpleName();
     }
 }
