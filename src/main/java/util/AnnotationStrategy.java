@@ -7,10 +7,7 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Properties;
+import java.util.*;
 
 
 //TODO
@@ -43,7 +40,7 @@ public class AnnotationStrategy implements MappingStrategy{
         boolean hasPk = false;
         String pkName = "";
         int count = 1;
-        Field[] fields = clazz.getDeclaredFields();
+        Field[] fields = clazz.getFields();
         for(Field f : fields){
             String fieldName = f.getName();
             query += "  " + fieldName + " ";
