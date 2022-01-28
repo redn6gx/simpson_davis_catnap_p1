@@ -1,7 +1,5 @@
 package util;
 
-import java.sql.PreparedStatement;
-
 public interface MappingStrategy {
     public String createTable(Class clazz);
     public String dropTable(Class clazz);

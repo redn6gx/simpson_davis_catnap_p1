@@ -16,7 +16,7 @@ import java.util.*;
 public class AnnotationStrategy implements MappingStrategy{
     @Override
     public String createTable(Class clazz){
-        String query = "CREATE TABLE ";
+        StringBuilder query = new StringBuilder("CREATE TABLE ");
 
         Object tableName = null;
         try{
@@ -28,7 +28,7 @@ public class AnnotationStrategy implements MappingStrategy{
         }
 
         String name = !tableName.equals("none") ? tableName + "" : clazz.getSimpleName();
-        query += (name + " (\n");
+        query.append(name).append(" (\n");
 
         Properties props = new Properties();
         try{
@@ -43,55 +43,54 @@ public class AnnotationStrategy implements MappingStrategy{
         Field[] fields = clazz.getFields();
         for(Field f : fields){
             String fieldName = f.getName();
-            query += "  " + fieldName + " ";
+            query.append("  ").append(fieldName).append(" ");
             if(f.isAnnotationPresent(Id.class)){
-                query += "serial";
+                query.append("serial");
                 hasPk = true;
                 pkName = fieldName;
             }else{
-                query += (props.getProperty(f.getType().getName()));
+                query.append(props.getProperty(f.getType().getName()));
             }
             if(!(count >= fields.length)){
-                query += ",\n";
+                query.append(",\n");
             }
             count++;
         }
         if(hasPk){
-            query += ",\n  primary key (" + pkName + ")";
+            query.append(",\n  primary key (").append(pkName).append(")");
         }
+        query.append("\n);");
 
-        query += "\n);";
-
-        return query;
+        return String.valueOf(query);
     }
     @Override
     public String dropTable(Class clazz){
-        String query = null;
-        return query;
+        StringBuilder query = new StringBuilder();
+        return String.valueOf(query);
     }
     @Override
     public String insert(Class clazz){
-        String query = null;
-         return query;
+        StringBuilder query = new StringBuilder();
+        return String.valueOf(query);
     }
     @Override
     public String get(Class clazz){
-        String query = null;
-        return query;
+        StringBuilder query = new StringBuilder();
+        return String.valueOf(query);
     }
     @Override
     public String getAll(Class clazz){
-        String query = null;
-        return query;
+        StringBuilder query = new StringBuilder();
+        return String.valueOf(query);
     }
     @Override
     public String update(Class clazz){
-        String query = null;
-        return query;
+        StringBuilder query = new StringBuilder();
+        return String.valueOf(query);
     }
     @Override
     public String delete(Class clazz){
-        String query = null;
-        return query;
+        StringBuilder query = new StringBuilder();
+        return String.valueOf(query);
     }
 }
