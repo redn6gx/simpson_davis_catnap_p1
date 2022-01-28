@@ -15,9 +15,8 @@ import java.util.Properties;
 
 //TODO
 //change to string builders
-//remove generics
 
-public class AnnotationStrategy<T> implements MappingStrategy <T> {
+public class AnnotationStrategy implements MappingStrategy{
     @Override
     public String createTable(Class clazz){
         String query = "CREATE TABLE ";
