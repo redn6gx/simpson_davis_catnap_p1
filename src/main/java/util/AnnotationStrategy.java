@@ -69,12 +69,12 @@ public class AnnotationStrategy implements MappingStrategy{
         return String.valueOf(query);
     }
     @Override
-    public String insert(Class clazz){
+    public String insert(Class clazz, int id){
         StringBuilder query = new StringBuilder();
         return String.valueOf(query);
     }
     @Override
-    public String get(Class clazz){
+    public String get(Class clazz, int id){
         StringBuilder query = new StringBuilder();
         return String.valueOf(query);
     }
@@ -84,12 +84,12 @@ public class AnnotationStrategy implements MappingStrategy{
         return String.valueOf(query);
     }
     @Override
-    public String update(Class clazz){
+    public String update(Class clazz, int id){
         StringBuilder query = new StringBuilder();
         return String.valueOf(query);
     }
     @Override
-    public String delete(Class clazz){
+    public String delete(Class clazz, int id){
         StringBuilder query = new StringBuilder();
         return String.valueOf(query);
     }
