@@ -71,4 +71,12 @@ public class AnnotationStrategyTest{
 
         assertEquals("SELECT * FROM Animals WHERE animalId = 12345;", result);
     }
+    @Test
+    public void testDelete(){
+        AnnotationStrategy aS = new AnnotationStrategy();
+        Class animal = Animal.class;
+        String result = aS.delete(animal, 12345);
+
+        assertEquals("DELETE FROM Animals WHERE animalId = 12345;", result);
+    }
 }
