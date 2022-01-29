@@ -38,3 +38,7 @@ Session objects during runtime.
 ### MappingStrategy
 This object performs the logic of looking up annotations in domain models and mapping
 them to database schema.
+
+#### Notes
+
+Refactor exceptions 
