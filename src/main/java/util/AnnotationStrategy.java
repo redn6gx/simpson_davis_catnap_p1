@@ -2,6 +2,7 @@ package util;
 
 import annotations.Entity;
 import annotations.Id;
+import javafx.scene.effect.Reflection;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -36,7 +37,7 @@ public class AnnotationStrategy<T> implements MappingStrategy<T>{
             }else{
                 query.append(props.getProperty(f.getType().getName()));
             }
-            if(!(count >= fields.length)){
+            if(!(count == fields.length)){
                 query.append(",\n");
             }
             count++;
@@ -54,10 +55,29 @@ public class AnnotationStrategy<T> implements MappingStrategy<T>{
         return String.valueOf(query);
     }
     @Override
-    public String insert(T instanceObject){
+    public String insert(T instanceObject) throws IllegalArgumentException, IllegalAccessException {
         StringBuilder query = new StringBuilder("INSERT INTO ");
         Class clazz = instanceObject.getClass();
         query.append(getTableName(clazz)).append(" VALUES (");
+
+        Field[] fields = clazz.getFields();
+        int count = 1;
+        for(Field f : fields){
+            if(f.isAnnotationPresent(Id.class)){
+                if(count == fields.length){
+                    query.append("default");
+                }else{
+                    query.append("default, ");
+                }
+            }else{
+                if(count == fields.length){
+                    query.append(f.get(instanceObject) + "");
+                }else{
+                    query.append(f.get(instanceObject) + ", ");
+                }
+            }
+        }
+        query.append(");");
 
         return String.valueOf(query);
     }
