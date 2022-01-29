@@ -92,7 +92,9 @@ public class AnnotationStrategy<T> implements MappingStrategy<T>{
     }
     @Override
     public String getAll(Class clazz){
-        StringBuilder query = new StringBuilder();
+        StringBuilder query = new StringBuilder("SELECT * FROM ");
+        query.append(getTableName(clazz) + ";");
+
         return String.valueOf(query);
     }
     @Override
