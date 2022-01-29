@@ -44,7 +44,7 @@ public class AnnotationStrategyTest {
         Animal animal = new Animal();
         String result = aS.insert(animal);
 
-        assertEquals("INSERT INTO Animals VALUES (default, true, false, blue, 26, 4, 212.07, 160.12);", result);
+        assertEquals("INSERT INTO Animals VALUES (default, true, false, 'blue', 26, 4, 212.07, 160.12);", result);
     }
 
 }

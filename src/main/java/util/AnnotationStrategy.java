@@ -66,9 +66,17 @@ public class AnnotationStrategy<T> implements MappingStrategy<T>{
                 }
             }else{
                 if(count == fields.length){
-                    query.append(f.get(instanceObject) + "");
+                    if(hasSingleQuotes(f.getType().getName())){
+                        query.append(f.get("'" + instanceObject) + "'");
+                    }else{
+                        query.append(f.get(instanceObject) + "");
+                    }
                 }else{
-                    query.append(f.get(instanceObject) + ", ");
+                    if(hasSingleQuotes(f.getType().getName())){
+                        query.append("'" + f.get(instanceObject) + "', ");
+                    }else{
+                        query.append(f.get(instanceObject) + ", ");
+                    }
                 }
             }
             count++;
@@ -110,5 +118,11 @@ public class AnnotationStrategy<T> implements MappingStrategy<T>{
         }
 
         return !tableName.equals("none") ? tableName + "" : clazz.getSimpleName();
+    }
+    private boolean hasSingleQuotes(String dataType){
+        if("java.lang.String".equals(dataType) || "java.lang.Character".equals(dataType) || "char".equals(dataType)) {
+            return true;
+        }
+        return false;
     }
 }
