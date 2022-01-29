@@ -10,7 +10,7 @@ public class AnnotationStrategyTest {
     @Entity(name = "Animals")
     class Animal {
         @Id
-        public boolean animalId;
+        public int animalId = 12345;
         public boolean fur = true;
         public Boolean scales = false;
         public String eyeColor = "blue";
@@ -46,5 +46,4 @@ public class AnnotationStrategyTest {
 
         assertEquals("INSERT INTO Animals VALUES (default, true, false, 'blue', 26, 4, 212.07, 160.12);", result);
     }
-
 }

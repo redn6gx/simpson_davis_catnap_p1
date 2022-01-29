@@ -14,7 +14,7 @@ public class AnnotationStrategy<T> implements MappingStrategy<T>{
     @Override
     public String createTable(Class clazz){
         StringBuilder query = new StringBuilder("CREATE TABLE ");
-        query.append( getTableName(clazz)).append(" (\n");
+        query.append(getTableName(clazz)).append(" (\n");
 
         Properties props = new Properties();
         try{
@@ -67,7 +67,7 @@ public class AnnotationStrategy<T> implements MappingStrategy<T>{
             }else{
                 if(count == fields.length){
                     if(hasSingleQuotes(f.getType().getName())){
-                        query.append(f.get("'" + instanceObject) + "'");
+                        query.append("'" + f.get(instanceObject) + "'");
                     }else{
                         query.append(f.get(instanceObject) + "");
                     }
@@ -96,8 +96,39 @@ public class AnnotationStrategy<T> implements MappingStrategy<T>{
         return String.valueOf(query);
     }
     @Override
-    public String update(Object instanceObject){
-        StringBuilder query = new StringBuilder();
+    public String update(Object instanceObject) throws IllegalAccessException {
+        StringBuilder query = new StringBuilder("UPDATE ");
+        Class clazz = instanceObject.getClass();
+        query.append(getTableName(clazz) + " SET ");
+
+        int count = 1;
+        String pkFieldName = null;
+        Object pkValue = null;
+        Field[] fields = clazz.getFields();
+        for(Field f : fields){
+            String fieldName = f.getName();
+            if(!f.isAnnotationPresent(Id.class)) {
+                if(count != fields.length){
+                    if(hasSingleQuotes(f.getType().getName())){
+                        query.append(fieldName + " = '" + f.get(instanceObject) + "', ");
+                    }else{
+                        query.append(fieldName + " = " + f.get(instanceObject) + ", ");
+                    }
+                }else{
+                    if(hasSingleQuotes(f.getType().getName())){
+                        query.append(fieldName + " = '" + f.get(instanceObject) + "' WHERE ");
+                    }else{
+                        query.append(fieldName + " = " + f.get(instanceObject) + " WHERE ");
+                    }
+                }
+            }else{
+                pkFieldName = fieldName;
+                pkValue = f.get(instanceObject);
+            }
+            count++;
+        }
+        query.append(pkFieldName + " = " + pkValue + ";");
+
         return String.valueOf(query);
     }
     @Override
