@@ -50,7 +50,7 @@ public class AnnotationStrategy<T> implements MappingStrategy<T>{
         return String.valueOf(query);
     }
     @Override
-    public String insert(T instanceObject) throws IllegalArgumentException, IllegalAccessException {
+    public String insert(Object instanceObject) throws IllegalArgumentException, IllegalAccessException {
         StringBuilder query = new StringBuilder("INSERT INTO ");
         Class clazz = instanceObject.getClass();
         query.append(getTableName(clazz)).append(" VALUES (");
@@ -71,6 +71,7 @@ public class AnnotationStrategy<T> implements MappingStrategy<T>{
                     query.append(f.get(instanceObject) + ", ");
                 }
             }
+            count++;
         }
         query.append(");");
 
@@ -87,7 +88,7 @@ public class AnnotationStrategy<T> implements MappingStrategy<T>{
         return String.valueOf(query);
     }
     @Override
-    public String update(T instanceObject){
+    public String update(Object instanceObject){
         StringBuilder query = new StringBuilder();
         return String.valueOf(query);
     }
