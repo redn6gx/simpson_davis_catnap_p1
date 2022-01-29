@@ -146,7 +146,18 @@ public class AnnotationStrategy<T> implements MappingStrategy<T>{
     }
     @Override
     public String delete(Class clazz, int id){
-        StringBuilder query = new StringBuilder();
+        StringBuilder query = new StringBuilder("DELETE FROM ");
+        query.append(getTableName(clazz) + " WHERE ");
+
+        Field[] fields = clazz.getFields();
+        String pkFieldName = null;
+        for(Field f : fields) {
+            if (f.isAnnotationPresent(Id.class)) {
+                pkFieldName = f.getName();
+            }
+        }
+        query.append(pkFieldName + " = " + id + ";");
+
         return String.valueOf(query);
     }
 
