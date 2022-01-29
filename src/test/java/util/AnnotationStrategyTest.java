@@ -46,4 +46,13 @@ public class AnnotationStrategyTest {
 
         assertEquals("INSERT INTO Animals VALUES (default, true, false, 'blue', 26, 4, 212.07, 160.12);", result);
     }
+    @Test
+    public void testUpdate() throws IllegalAccessException {
+        AnnotationStrategy aS = new AnnotationStrategy();
+        Animal animal = new Animal();
+        String result = aS.update(animal);
+
+        assertEquals("UPDATE Animals SET fur = true, scales = false, eyeColor = 'blue', numOfTeeth = 26," +
+                " numOfLegs = 4, weight = 212.07, weight2 = 160.12 WHERE animalId = 12345;" , result );
+    }
 }
