@@ -8,6 +8,7 @@ import org.apache.logging.log4j.Logger;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
 
@@ -165,15 +166,11 @@ public class AnnotationStrategy<T> implements MappingStrategy<T>{
     }
 
     //Helper Methods
-    private String getTableName(Class clazz){
+    private String getTableName(Class clazz) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         Object tableName = null;
-        try{
-            Annotation annotation = clazz.getAnnotation(Entity.class);
-            Method m = annotation.annotationType().getMethod("name");
-            tableName = m.invoke(annotation);
-        } catch(NoSuchMethodException | java.lang.IllegalAccessException | java.lang.reflect.InvocationTargetException e){
-            logger.error(e.getMessage());
-        }
+        Annotation annotation = clazz.getAnnotation(Entity.class);
+        Method m = annotation.annotationType().getMethod("name");
+        tableName = m.invoke(annotation);
 
         return !tableName.equals("none") ? tableName + "" : clazz.getSimpleName();
     }
