@@ -56,11 +56,19 @@ public class AnnotationStrategyTest{
                 " numOfLegs = 4, weight = 212.07, weight2 = 160.12 WHERE animalId = 12345;", result );
     }
     @Test
-    public void testGetAll() {
+    public void testGetAll(){
         AnnotationStrategy aS = new AnnotationStrategy();
         Class animal = Animal.class;
         String result = aS.getAll(animal);
 
         assertEquals("SELECT * FROM Animals;", result);
+    }
+    @Test
+    public void testGet(){
+        AnnotationStrategy aS = new AnnotationStrategy();
+        Class animal = Animal.class;
+        String result = aS.get(animal, 12345);
+
+        assertEquals("SELECT * FROM Animals WHERE animalId = 12345;", result);
     }
 }
