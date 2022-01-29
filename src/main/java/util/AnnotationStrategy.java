@@ -2,7 +2,8 @@ package util;
 
 import annotations.Entity;
 import annotations.Id;
-import javafx.scene.effect.Reflection;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -11,6 +12,8 @@ import java.lang.reflect.Method;
 import java.util.*;
 
 public class AnnotationStrategy<T> implements MappingStrategy<T>{
+    private final static Logger logger = LogManager.getLogger(AnnotationStrategy.class);
+
     @Override
     public String createTable(Class clazz){
         StringBuilder query = new StringBuilder("CREATE TABLE ");
@@ -20,7 +23,7 @@ public class AnnotationStrategy<T> implements MappingStrategy<T>{
         try{
             props.load(AnnotationStrategy.class.getClassLoader().getResourceAsStream("mapping.properties"));
         } catch(IOException e){
-            System.out.println(e.getMessage());
+            logger.error(e.getMessage());
         }
 
         boolean hasPk = false;
@@ -161,7 +164,7 @@ public class AnnotationStrategy<T> implements MappingStrategy<T>{
         return String.valueOf(query);
     }
 
-    //Helper Method
+    //Helper Methods
     private String getTableName(Class clazz){
         Object tableName = null;
         try{
@@ -169,7 +172,7 @@ public class AnnotationStrategy<T> implements MappingStrategy<T>{
             Method m = annotation.annotationType().getMethod("name");
             tableName = m.invoke(annotation);
         } catch(NoSuchMethodException | java.lang.IllegalAccessException | java.lang.reflect.InvocationTargetException e){
-            System.out.println(e.getMessage());
+            logger.error(e.getMessage());
         }
 
         return !tableName.equals("none") ? tableName + "" : clazz.getSimpleName();
