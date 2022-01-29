@@ -50,11 +50,6 @@ public class AnnotationStrategy<T> implements MappingStrategy<T>{
         return String.valueOf(query);
     }
     @Override
-    public String dropTable(Class clazz){
-        StringBuilder query = new StringBuilder();
-        return String.valueOf(query);
-    }
-    @Override
     public String insert(T instanceObject) throws IllegalArgumentException, IllegalAccessException {
         StringBuilder query = new StringBuilder("INSERT INTO ");
         Class clazz = instanceObject.getClass();
