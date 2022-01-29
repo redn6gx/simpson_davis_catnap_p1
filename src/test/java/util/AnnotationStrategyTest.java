@@ -6,7 +6,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class AnnotationStrategyTest {
+public class AnnotationStrategyTest{
     @Entity(name = "Animals")
     class Animal {
         @Id
@@ -39,7 +39,7 @@ public class AnnotationStrategyTest {
                 ");", result);
     }
     @Test
-    public void testInsert() throws IllegalAccessException {
+    public void testInsert() throws IllegalAccessException{
         AnnotationStrategy aS = new AnnotationStrategy();
         Animal animal = new Animal();
         String result = aS.insert(animal);
@@ -47,12 +47,20 @@ public class AnnotationStrategyTest {
         assertEquals("INSERT INTO Animals VALUES (default, true, false, 'blue', 26, 4, 212.07, 160.12);", result);
     }
     @Test
-    public void testUpdate() throws IllegalAccessException {
+    public void testUpdate() throws IllegalAccessException{
         AnnotationStrategy aS = new AnnotationStrategy();
         Animal animal = new Animal();
         String result = aS.update(animal);
 
         assertEquals("UPDATE Animals SET fur = true, scales = false, eyeColor = 'blue', numOfTeeth = 26," +
-                " numOfLegs = 4, weight = 212.07, weight2 = 160.12 WHERE animalId = 12345;" , result );
+                " numOfLegs = 4, weight = 212.07, weight2 = 160.12 WHERE animalId = 12345;", result );
+    }
+    @Test
+    public void testGetAll() {
+        AnnotationStrategy aS = new AnnotationStrategy();
+        Class animal = Animal.class;
+        String result = aS.getAll(animal);
+
+        assertEquals("SELECT * FROM Animals;", result);
     }
 }
