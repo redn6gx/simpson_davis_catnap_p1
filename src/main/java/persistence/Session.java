@@ -185,7 +185,7 @@ public class Session implements EntityManager {
         }
 
         Optional<CatnapResult> entity = buildEntity(clazz, rs);
-        cache.store(entity);
+        entity.ifPresent(cache::store);
         return entity;
     }
 
