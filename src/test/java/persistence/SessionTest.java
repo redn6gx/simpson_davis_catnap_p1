@@ -44,6 +44,9 @@ public class SessionTest {
     private PreparedStatement statement;
 
     @Mock
+    private PreparedStatement statement2;
+
+    @Mock
     private ResultSet resultSet;
 
     @Mock
@@ -67,8 +70,7 @@ public class SessionTest {
         when(resultSet.getObject("id")).thenReturn(model.getId());
         when(resultSet.getObject("name")).thenReturn(model.getName());
 
-        Optional<Object> op;
-        op = session.get(model.getClass(), model.getId());
+        Optional<Object> op = session.get(model.getClass(), model.getId());
 
         verify(cache, times(1)).contains(model.getClass(), model.getId());
         verify(cache, times(1)).store(Mockito.any(model.getClass()));
@@ -155,5 +157,46 @@ public class SessionTest {
         when(statement.executeQuery()).thenThrow(SQLException.class);
 
         assertThrows(CatnapException.class, () -> session.getAll(model.getClass()));
+    }
+
+    @Test
+    public void testGetWithOneToOne() throws SQLException, CatnapException {
+        MockModel model1 = new MockModel(1, "mock1");
+        MockModel model2 = new MockModel(2, "mock2");
+        MockModelWithOneToOne follower = new MockModelWithOneToOne(1, "follower");
+        follower.setLeader(model2);
+
+        // get call
+        when(mappingStrategy.get(follower.getClass(), follower.getId())).thenReturn("g");
+        when(connection.prepareStatement("g")).thenReturn(statement);
+        when(statement.executeQuery()).thenReturn(resultSet);
+        when(resultSet.next()).thenReturn(true);
+        when(resultSet.getObject("id")).thenReturn(follower.getId());
+        when(resultSet.getObject("name")).thenReturn(follower.getName());
+        when(resultSet.getInt("mock_id")).thenReturn(model2.getId());
+
+        // getAll call
+        when(mappingStrategy.getAll(model1.getClass())).thenReturn("a");
+        when(connection.prepareStatement("a")).thenReturn(statement2);
+        when(statement2.executeQuery()).thenReturn(resultSet2);
+        when(resultSet2.next()).thenReturn(true, true, false);
+        when(resultSet2.getObject("id")).thenReturn(model1.getId(), model2.getId());
+        when(resultSet2.getObject("name")).thenReturn(model1.getName(), model2.getName());
+
+        Optional<Object> op = session.get(follower.getClass(), follower.getId());
+
+        verify(cache, times(1)).store(Mockito.any(follower.getClass()));
+        verify(cache, times(2)).store(Mockito.any(model1.getClass()));
+
+        assertTrue(op.isPresent());
+        MockModelWithOneToOne gotModel = (MockModelWithOneToOne) op.get();
+
+        assertEquals(gotModel.getId(), follower.getId());
+        assertEquals(gotModel.getName(), follower.getName());
+
+        MockModel gotLeader = follower.getLeader();
+
+        assertEquals(gotLeader.getId(), model2.getId());
+        assertEquals(gotLeader.getName(), model2.getName());
     }
 }
