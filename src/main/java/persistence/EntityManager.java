@@ -22,7 +22,7 @@ public interface EntityManager {
      * @throws CatnapException   thrown when a database operation fails, initialization of an entity fails,
      * or when trying to illegally access a member of an entity
      */
-    public Optional<Object> get(Class<?> clazz, int id) throws CatnapException, InstantiationException;
+    public Optional<Object> get(Class<?> clazz, int id) throws CatnapException;
 
     /**
      * This method returns a list of all entities of the type specificed by clazz. The list will be empty
