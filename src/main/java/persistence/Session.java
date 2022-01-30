@@ -194,8 +194,8 @@ public class Session implements EntityManager {
     private void extractFieldData(Field f, Object entity, ResultSet rs) throws CatnapException {
         f.setAccessible(true);
 
-        // First we check if field has OneToMany annotation, where we then load all of the entities
-        // of that type into the database and build the assocations
+        // First we check if field has OneToMany annotation, where we then load all the entities
+        // of that type into the database and build the associations
         if(f.isAnnotationPresent(OneToMany.class)) {
             ParameterizedType entityType = (ParameterizedType) f.getGenericType();
             Class<?> entityClass = (Class<?>) entityType.getActualTypeArguments()[0];
@@ -213,8 +213,9 @@ public class Session implements EntityManager {
             // Secondly we check if the field has the OneToOne annotation on it. If it does, we load
             // all the entities into the database and filter out the one we need.
         } else if(f.isAnnotationPresent(OneToOne.class)) {
-            List<Object> entities = getAll(entity.getClass());
-            String foreignKeyFieldName = entity.getClass().getAnnotation(OneToOne.class).name();
+            List<Object> entities = getAll(f.getType());
+
+            String foreignKeyFieldName = f.getAnnotation(OneToOne.class).name();
             int id;
             try {
                 id = rs.getInt(foreignKeyFieldName);
@@ -224,22 +225,23 @@ public class Session implements EntityManager {
                 throw new CatnapException(s);
             }
 
-            Optional<Object> relatedObject = entities.stream().filter((relatedEntity) -> {
-                Optional<Field> idField = getIdFromEntity(entity);
+            Optional<Object> relatedObject = Optional.empty();
+            for (Object e: entities) {
+                Optional<Field> idField = getIdFromEntity(e);
 
                 if(idField.isPresent()) {
                     idField.get().setAccessible(true);
 
                     try {
-                        return idField.get().getInt(relatedEntity) == id;
-                    } catch (IllegalAccessException e) {
-                        logger.error("Unable to access related entity id, " + e.getMessage());
-                        return false;
+                        if(idField.get().getInt(e) == id) {
+                            relatedObject = Optional.of(e);
+                            break;
+                        }
+                    } catch (IllegalAccessException ex) {
+                        ex.printStackTrace();
                     }
-                } else {
-                    return false;
                 }
-            }).findFirst();
+            }
 
             if(relatedObject.isPresent()) {
                 try {
