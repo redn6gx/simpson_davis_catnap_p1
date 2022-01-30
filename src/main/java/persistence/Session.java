@@ -17,6 +17,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -42,6 +43,18 @@ public class Session implements EntityManager {
         this.cache = cache;
     }
 
+    /**
+     * This method returns an Optional of an entity that was obtained from either the
+     * l1 cache or the database. If isPresent is false then the entity does not exist
+     * in the database. This method will resolve relationships by loading them into memory
+     * and assigning the relevant references.
+     *
+     * @param clazz              the type of entity to be returned
+     * @param id                 the database identity of the entity to be returned
+     * @return                   optional of the java object version of the returning entity
+     * @throws CatnapException   thrown when a database operation fails, initialization of an entity fails,
+     * or when trying to illegally access a member of an entity
+     */
     @Override
     public Optional<Object> get(Class<?> clazz, int id) throws CatnapException {
         if(cache.contains(clazz, id)) {
@@ -49,26 +62,66 @@ public class Session implements EntityManager {
         }
 
         String sql = this.mappingStrategy.get(clazz, id);
+        PreparedStatement query;
+        ResultSet rs;
 
-        Optional<Object> entity;
         try {
-            PreparedStatement query = this.connection.prepareStatement(sql);
-            ResultSet rs = query.executeQuery();
+            query = this.connection.prepareStatement(sql);
+            rs = query.executeQuery();
 
-            entity = buildEntity(clazz, rs);
-            entity.ifPresent(cache::store);
         } catch (SQLException e) {
-            logger.error("There was an error performing a select on the database for entity type: " + clazz.getName() + ", error message:" + e.getMessage());
-            throw new CatnapException(e.getMessage());
+            String s = "There was an error performing a select on the database for entity type: " + clazz.getName() + ", error message:" + e.getMessage();
+            logger.error(s);
+            throw new CatnapException(s);
         }
+        Optional<Object> entity;
+
+        entity = buildEntity(clazz, rs);
+        entity.ifPresent(cache::store);
 
         return entity;
     }
 
 
+    /**
+     * This method returns a list of all entities of the type specificed by clazz. The list will be empty
+     * if no entities are found. Whenever this method is called it will query the database and update the
+     * cache.
+     *
+     * @param clazz              the type of entity to get all records of
+     * @return                   a list of entities found in the database
+     * @throws CatnapException   thrown when a database operation fails, initialization of an entity fails,
+     * or when trying to illegally access a member of an entity
+     */
     @Override
     public List<Object> getAll(Class<?> clazz) throws CatnapException {
-        return null;
+        List<Object> entities = new ArrayList<>();
+
+        String sql = this.mappingStrategy.getAll(clazz);
+        PreparedStatement query;
+        ResultSet rs;
+        try {
+            query = this.connection.prepareStatement(sql);
+            rs = query.executeQuery();
+        } catch (SQLException e) {
+            String s = "There was an error performing a select on the database for entity type: " + clazz.getName() + ", error message:" + e.getMessage();
+            logger.error(s);
+            throw new CatnapException(s);
+        }
+
+        // buildEntity calls rs.next() so we just need to check if we got an empty optional
+        while(true) {
+
+            Optional<Object> op = buildEntity(clazz, rs);
+            if(op.isPresent()) {
+                entities.add(op.get());
+                cache.store(op.get());
+            } else {
+                break;
+            }
+        }
+
+        return entities;
     }
 
     @Override
@@ -157,8 +210,8 @@ public class Session implements EntityManager {
                 throw new CatnapException(s);
             }
 
-            // Secondly we check if the field has the OneToOne annotation on it. If it does we load
-            // all of the entities into the database and filter out the one we need.
+            // Secondly we check if the field has the OneToOne annotation on it. If it does, we load
+            // all the entities into the database and filter out the one we need.
         } else if(f.isAnnotationPresent(OneToOne.class)) {
             List<Object> entities = getAll(entity.getClass());
             String foreignKeyFieldName = entity.getClass().getAnnotation(OneToOne.class).name();
