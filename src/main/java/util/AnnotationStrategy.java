@@ -16,7 +16,7 @@ public class AnnotationStrategy<T> implements MappingStrategy<T>{
     private final static Logger logger = LogManager.getLogger(AnnotationStrategy.class);
 
     @Override
-    public String createTable(Class clazz){
+    public String createTable(Class clazz) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
         StringBuilder query = new StringBuilder("CREATE TABLE ");
         query.append(getTableName(clazz)).append(" (\n");
 
@@ -54,7 +54,7 @@ public class AnnotationStrategy<T> implements MappingStrategy<T>{
         return String.valueOf(query);
     }
     @Override
-    public String insert(Object instanceObject) throws IllegalArgumentException, IllegalAccessException {
+    public String insert(Object instanceObject) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
         StringBuilder query = new StringBuilder("INSERT INTO ");
         Class clazz = instanceObject.getClass();
         query.append(getTableName(clazz)).append(" VALUES (");
@@ -90,7 +90,7 @@ public class AnnotationStrategy<T> implements MappingStrategy<T>{
         return String.valueOf(query);
     }
     @Override
-    public String get(Class clazz, int id){
+    public String get(Class clazz, int id) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
         StringBuilder query = new StringBuilder("SELECT * FROM ");
         query.append(getTableName(clazz) + " WHERE ");
 
@@ -106,14 +106,14 @@ public class AnnotationStrategy<T> implements MappingStrategy<T>{
         return String.valueOf(query);
     }
     @Override
-    public String getAll(Class clazz){
+    public String getAll(Class clazz) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
         StringBuilder query = new StringBuilder("SELECT * FROM ");
         query.append(getTableName(clazz) + ";");
 
         return String.valueOf(query);
     }
     @Override
-    public String update(Object instanceObject) throws IllegalAccessException {
+    public String update(Object instanceObject) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
         StringBuilder query = new StringBuilder("UPDATE ");
         Class clazz = instanceObject.getClass();
         query.append(getTableName(clazz) + " SET ");
@@ -149,7 +149,7 @@ public class AnnotationStrategy<T> implements MappingStrategy<T>{
         return String.valueOf(query);
     }
     @Override
-    public String delete(Class clazz, int id){
+    public String delete(Class clazz, int id) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
         StringBuilder query = new StringBuilder("DELETE FROM ");
         query.append(getTableName(clazz) + " WHERE ");
 

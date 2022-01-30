@@ -4,6 +4,9 @@ import annotations.Entity;
 import annotations.Id;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+
+import java.lang.reflect.InvocationTargetException;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class AnnotationStrategyTest{
@@ -21,7 +24,7 @@ public class AnnotationStrategyTest{
     }
 
     @Test
-    public void testCreateTable(){
+    public void testCreateTable() throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
         AnnotationStrategy aS = new AnnotationStrategy();
         Class animal = Animal.class;
         String result = aS.createTable(animal);
@@ -39,7 +42,7 @@ public class AnnotationStrategyTest{
                 ");", result);
     }
     @Test
-    public void testInsert() throws IllegalAccessException{
+    public void testInsert() throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
         AnnotationStrategy aS = new AnnotationStrategy();
         Animal animal = new Animal();
         String result = aS.insert(animal);
@@ -47,7 +50,7 @@ public class AnnotationStrategyTest{
         assertEquals("INSERT INTO Animals VALUES (default, true, false, 'blue', 26, 4, 212.07, 160.12);", result);
     }
     @Test
-    public void testUpdate() throws IllegalAccessException{
+    public void testUpdate() throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
         AnnotationStrategy aS = new AnnotationStrategy();
         Animal animal = new Animal();
         String result = aS.update(animal);
@@ -56,7 +59,7 @@ public class AnnotationStrategyTest{
                 " numOfLegs = 4, weight = 212.07, weight2 = 160.12 WHERE animalId = 12345;", result );
     }
     @Test
-    public void testGetAll(){
+    public void testGetAll() throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
         AnnotationStrategy aS = new AnnotationStrategy();
         Class animal = Animal.class;
         String result = aS.getAll(animal);
@@ -64,7 +67,7 @@ public class AnnotationStrategyTest{
         assertEquals("SELECT * FROM Animals;", result);
     }
     @Test
-    public void testGet(){
+    public void testGet() throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
         AnnotationStrategy aS = new AnnotationStrategy();
         Class animal = Animal.class;
         String result = aS.get(animal, 12345);
@@ -72,7 +75,7 @@ public class AnnotationStrategyTest{
         assertEquals("SELECT * FROM Animals WHERE animalId = 12345;", result);
     }
     @Test
-    public void testDelete(){
+    public void testDelete() throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
         AnnotationStrategy aS = new AnnotationStrategy();
         Class animal = Animal.class;
         String result = aS.delete(animal, 12345);
