@@ -14,6 +14,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class AnnotationStrategyTest{
+    private static List<Object> models1 = new ArrayList<>();
+    private static List<Object> models2 = new ArrayList<>();
+
     @Entity(name = "Animals")
     class Animal {
         @Id
@@ -25,6 +28,22 @@ public class AnnotationStrategyTest{
         public Integer numOfLegs = 4;
         public Double weight = 212.07;
         public double weight2 = 160.12;
+    }
+    @Entity
+    class Car {
+        @Id
+        public int carId = 56789;
+        public String paintColor = "silver";
+        public Double weight = 4128.13;
+        public int horsePower = 357;
+    }
+
+    @BeforeAll
+    public void init() {
+        Animal animal = new Animal();
+        Car car = new Car();
+        models2.add(animal);
+        models2.add(car);
     }
 
     @Test
@@ -85,5 +104,28 @@ public class AnnotationStrategyTest{
         String result = aS.delete(animal, 12345);
 
         assertEquals("DELETE FROM Animals WHERE animalId = 12345;", result);
+    }
+    @Test
+    public void testBuildSchema() {
+        AnnotationStrategy aS = new AnnotationStrategy();
+        String result = aS.buildSchema(models2);
+
+        assertEquals("CREATE TABLE Animals (\n" +
+                "  animalId serial,\n" +
+                "  fur BOOL,\n" +
+                "  scales BOOL,\n" +
+                "  eyeColor VARCHAR(50),\n" +
+                "  numOfTeeth INTEGER,\n" +
+                "  numOfLegs INTEGER,\n" +
+                "  weight DECIMAL(10,2),\n" +
+                "  weight2 DECIMAL(10,2),\n" +
+                "  primary key (animalId)\n" +
+                ");CREATE TABLE Car (\n" +
+                "  carId serial,\n" +
+                "  paintColor VARCHAR(50),\n" +
+                "  weight DECIMAL(10,2),\n" +
+                "  horsePower INTEGER,\n" +
+                "  primary key (carId)\n" +
+                ");", result);
     }
 }
