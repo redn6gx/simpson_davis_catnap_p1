@@ -28,5 +28,5 @@ public interface EntityManagerFactory {
      * This method retrieves the EntityManager for a user session.
      * @param id     the id of the user session
      */
-    public EntityManager getSessionContext(String id);
+    public EntityManager getSessionContext(String id) throws ConnectionFailedException;
 }
