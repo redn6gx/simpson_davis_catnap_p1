@@ -1,23 +1,17 @@
 package persistence;
 
-import annotations.OneToMany;
-import annotations.OneToOne;
 import exceptions.CatnapException;
 import exceptions.RollbackException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import util.Cache;
 import util.CatnapResult;
 import util.MappingStrategy;
 import util.SimpleConnectionPool;
 
-import javax.swing.text.html.Option;
 import java.lang.reflect.Field;
-import java.lang.reflect.ParameterizedType;
 import java.sql.*;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -32,8 +26,7 @@ import java.util.stream.Collectors;
  * and goes right to step 4.
  * 2. The helper method returns a CatnapResult or List<CatnapResult> object depending on the method
  * 3. Method caches result.
- * 4. Dependencies are resolved through a helper method.
- * 5. entity is finally returned
+ * 4. entity is returned
  */
 public class Session implements EntityManager {
 
@@ -70,25 +63,35 @@ public class Session implements EntityManager {
         if(cache.contains(clazz, id)) {
             entityOp = cache.get(clazz, id);
         } else {
-            entityOp = getFromDatabase(clazz, id);
-        }
+            String sql = this.mappingStrategy.get(clazz, id);
+            PreparedStatement query;
+            ResultSet rs;
 
-        // now that we have entityOp we need to resolve dependencies
-        if(entityOp.isPresent()) {
-            CatnapResult entityResult = entityOp.get();
+            try {
+                query = this.connection.prepareStatement(sql);
+                rs = query.executeQuery();
 
-            if(entityResult.hasOneToOneField()) {
-                resolveOneToOne(entityResult);
+            } catch (SQLException e) {
+                String s = "There was an error performing a select on the database for entity type: " + clazz.getName() + ", error message:" + e.getMessage();
+                logger.error(s);
+                throw new CatnapException(s);
             }
 
-            if(entityResult.hasOneToManyField()) {
-                resolveOneToMany(entityResult);
+            try {
+                if(!rs.next()) {
+                    return Optional.empty();
+                }
+            } catch (SQLException e) {
+                String s = "There was an error when trying to move the cursor in the ResultSet for entity" + clazz.getName() + ". Got error: " + e.getMessage();
+                logger.error(s);
+                throw new CatnapException(s);
             }
 
-            return Optional.of(entityResult.getEntity());
-        } else {
-            return Optional.empty();
+            entityOp = buildEntity(clazz, rs);
+            entityOp.ifPresent(cache::store);
         }
+
+        return entityOp.map(CatnapResult::getEntity);
     }
 
     /**
@@ -102,178 +105,6 @@ public class Session implements EntityManager {
      */
     @Override
     public List<Object> getAll(Class<?> clazz) throws CatnapException {
-        List<CatnapResult> entities = getAllFromDatabase(clazz);
-
-        for(CatnapResult entity: entities) {
-            if(entity.hasOneToOneField()) {
-                resolveOneToOne(entity);
-            }
-
-            if(entity.hasOneToManyField()) {
-                resolveOneToMany(entity);
-            }
-        }
-
-        return entities.stream()
-                .map(CatnapResult::getEntity)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public void delete(Object entity) throws CatnapException {
-        CatnapResult wrappedEntity = new CatnapResult(entity);
-        Optional<Integer> entityId = wrappedEntity.getId();
-
-        String sql = this.mappingStrategy.delete(
-                wrappedEntity.getEntityType(),
-                entityId.orElseThrow(() -> new CatnapException("Entity type: " + wrappedEntity.getEntityType() + " had no id field!"))
-        );
-        PreparedStatement query;
-
-        try {
-            query = this.connection.prepareStatement(sql);
-            query.executeUpdate();
-            cache.remove(wrappedEntity); // cascading the delete is done in the cache
-
-        } catch (SQLException e) {
-            String s = "There was an error performing a select on the database for entity type: " + wrappedEntity.getEntityType().getName() + ", error message:" + e.getMessage();
-            logger.error(s);
-            throw new CatnapException(s);
-        }
-    }
-
-    @Override
-    public void persist(Object entity) throws CatnapException {
-        CatnapResult wrappedEntity = new CatnapResult(entity);
-        String sql = this.mappingStrategy.insert(entity);
-
-        PreparedStatement query;
-
-        // store entity itself
-        try {
-            query = this.connection.prepareStatement(sql);
-            query.executeUpdate();
-            cache.store(wrappedEntity); // store should also store the associated entities
-
-        } catch (SQLException e) {
-            String s = "There was an error performing a select on the database for entity type: " + wrappedEntity.getEntityType().getName() + ", error message:" + e.getMessage();
-            logger.error(s);
-            throw new CatnapException(s);
-        }
-
-        if(wrappedEntity.hasOneToOneField()) {
-            List<Field> oneToOneFields = wrappedEntity.getOneToOneFields();
-
-            for(Field f: oneToOneFields) {
-                f.setAccessible(true);
-                try {
-                    Object e = f.get(entity);
-                    persist(e, wrappedEntity.getId().orElseThrow(() -> new CatnapException("Tried to get id of " + wrappedEntity.getEntityType())));
-                } catch (IllegalAccessException ex) {
-                    String s = "Unable to access field of type: " + f.getType() + " when trying to instantiate it.";
-                    logger.error(s);
-                    throw new CatnapException(s + ", error message: " + ex.getMessage());
-                }
-            }
-        }
-
-        if(wrappedEntity.hasOneToManyField()) {
-            List<Field> oneToManyFields = wrappedEntity.getOneToManyFields();
-
-            for(Field f: oneToManyFields) {
-                f.setAccessible(true);
-                try {
-                    // this should work because it has to be a collection
-                    Collection<Object> relations = (Collection<Object>) f.get(entity);
-                    for(Object e: relations) {
-                        persist(e);
-                    }
-                } catch (IllegalAccessException e) {
-                    String s = "Unable to access field of type: " + f.getType() + " when trying to instantiate it.";
-                    logger.error(s);
-                    throw new CatnapException(s + ", error message: " + e.getMessage());
-                }
-            }
-        }
-    }
-
-    public void persist(Object entity, int id) throws NotImplementedException {
-        throw new NotImplementedException();
-    }
-
-    @Override
-    public void update(Object entity) throws CatnapException {
-        String sql = this.mappingStrategy.update(entity);
-    }
-
-    @Override
-    public void beginTransaction() throws CatnapException {
-
-    }
-
-    @Override
-    public void commit() throws RollbackException {
-
-    }
-
-    @Override
-    public void rollback() throws CatnapException {
-
-    }
-
-    @Override
-    public void close() {
-
-    }
-
-    /**
-     * This method retrieves the entity from the database and calls buildEntity
-     * to initialize not associative fields. It stores the entity it found in the cache.
-     * @param clazz            the type of entity to retrieve, corresponds to a table
-     * @param id               the id of the entity to retrieve
-     * @return                 an optional of a CatnapResult holding the entity
-     * @throws CatnapException thrown when a field can't be accessed, when the entity can't be instantiated,
-     * or when an error occurs in accessing the database or database objects
-     */
-    private Optional<CatnapResult> getFromDatabase(Class<?> clazz, int id) throws CatnapException {
-        String sql = this.mappingStrategy.get(clazz, id);
-        PreparedStatement query;
-        ResultSet rs;
-
-        try {
-            query = this.connection.prepareStatement(sql);
-            rs = query.executeQuery();
-
-        } catch (SQLException e) {
-            String s = "There was an error performing a select on the database for entity type: " + clazz.getName() + ", error message:" + e.getMessage();
-            logger.error(s);
-            throw new CatnapException(s);
-        }
-
-        try {
-            if(!rs.next()) {
-                return Optional.empty();
-            }
-        } catch (SQLException e) {
-            String s = "There was an error when trying to move the cursor in the ResultSet for entity" + clazz.getName() + ". Got error: " + e.getMessage();
-            logger.error(s);
-            throw new CatnapException(s);
-        }
-
-        Optional<CatnapResult> entity = buildEntity(clazz, rs);
-        entity.ifPresent(cache::store);
-        return entity;
-    }
-
-    /**
-     * This method is used to get all entities of a type clazz from the database. It stores them
-     * all in the cache.
-     * @param clazz               the type to get all entities of, corresponds to a table
-     * @return                    a list of CatnapResults encapsulating the entities.
-     * @throws CatnapException    thrown when a field can't be accessed, when the entity can't be instantiated,
-     * or when an error occurs in accessing the database or database objects
-     */
-    private List<CatnapResult> getAllFromDatabase(Class<?> clazz) throws CatnapException {
         String sql = this.mappingStrategy.getAll(clazz);
         PreparedStatement query;
         ResultSet rs;
@@ -302,7 +133,144 @@ public class Session implements EntityManager {
         }
 
         cache.store(entities);
-        return entities;
+
+        return entities.stream()
+                .map(CatnapResult::getEntity)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * This method removes a record of an entity from the database. It is also removed from the cache.
+     * @param entity             the entity to delete
+     * @throws CatnapException   thrown when a field can't be accessed, when the entity can't be instantiated,
+     * or when an error occurs in accessing the database or database objects
+     */
+    @Override
+    public void delete(Object entity) throws CatnapException {
+        CatnapResult wrappedEntity = new CatnapResult(entity);
+        Optional<Integer> entityId = wrappedEntity.getId();
+
+        String sql = this.mappingStrategy.delete(
+                wrappedEntity.getEntityType(),
+                entityId.orElseThrow(() -> new CatnapException("Entity type: " + wrappedEntity.getEntityType() + " had no id field!"))
+        );
+        PreparedStatement query;
+
+        try {
+            query = this.connection.prepareStatement(sql);
+            query.executeUpdate();
+            cache.remove(wrappedEntity);
+
+        } catch (SQLException e) {
+            String s = "There was an error performing a select on the database for entity type: " + wrappedEntity.getEntityType().getName() + ", error message:" + e.getMessage();
+            logger.error(s);
+            throw new CatnapException(s);
+        }
+    }
+
+    /**
+     * This method inserts a record of an entity into the database. It is also adds it to the cache.
+     * @param entity             the entity to persist
+     * @throws CatnapException   thrown when a field can't be accessed, when the entity can't be instantiated,
+     * or when an error occurs in accessing the database or database objects
+     */
+    @Override
+    public void persist(Object entity) throws CatnapException {
+        CatnapResult wrappedEntity = new CatnapResult(entity);
+        String sql = this.mappingStrategy.insert(entity);
+
+        PreparedStatement query;
+
+        // store entity itself
+        try {
+            query = this.connection.prepareStatement(sql);
+            query.executeUpdate();
+            cache.store(wrappedEntity);
+
+        } catch (SQLException e) {
+            String s = "There was an error performing a select on the database for entity type: " + wrappedEntity.getEntityType().getName() + ", error message:" + e.getMessage();
+            logger.error(s);
+            throw new CatnapException(s);
+        }
+    }
+
+    /**
+     * This method updates a record of an entity in the database. It is also updated in the cache.
+     * @param entity             the entity to update with the updated values
+     * @throws CatnapException   thrown when a field can't be accessed, when the entity can't be instantiated,
+     * or when an error occurs in accessing the database or database objects
+     */
+    @Override
+    public void update(Object entity) throws CatnapException {
+        CatnapResult wrappedEntity = new CatnapResult(entity);
+        String sql = this.mappingStrategy.update(entity);
+
+        PreparedStatement query;
+
+        // store entity itself
+        try {
+            query = this.connection.prepareStatement(sql);
+            query.executeUpdate();
+            cache.store(wrappedEntity);
+
+        } catch (SQLException e) {
+            String s = "There was an error performing a select on the database for entity type: " + wrappedEntity.getEntityType().getName() + ", error message:" + e.getMessage();
+            logger.error(s);
+            throw new CatnapException(s);
+        }
+    }
+
+    /**
+     * Begins a transaction
+     *
+     * @throws CatnapException    thrown when something goes wrong in starting a transaction
+     */
+    @Override
+    public void beginTransaction() throws CatnapException {
+        try {
+            this.connection.setAutoCommit(false);
+        } catch (SQLException e) {
+            logger.error("There was an error when trying to start a transaction. Got: " + e.getMessage());
+            throw new CatnapException();
+        }
+    }
+
+    /**
+     * Commits a transaction
+     *
+     * @throws RollbackException    thrown when something goes wrong when committing the transaction
+     */
+    @Override
+    public void commit() throws RollbackException {
+        try {
+            this.connection.commit();
+        } catch (SQLException e) {
+            logger.error("There was an error when trying to commit a transaction. Got: " + e.getMessage());
+            throw new RollbackException();
+        }
+    }
+
+    /**
+     * Rolls back the transaction to return the database to its pervious state
+     *
+     * @throws CatnapException    thrown when something goes wrong rolling back the database.
+     */
+    @Override
+    public void rollback() throws CatnapException {
+        try {
+            this.connection.rollback();
+        } catch (SQLException e) {
+            logger.error("There was an error when trying to rollback a transaction. Got: " + e.getMessage());
+            throw new CatnapException();
+        }
+    }
+
+    /**
+     * This method releases the connection this EntityManager was using
+     */
+    @Override
+    public void close() {
+        SessionFactory.getInstance().releaseConnection(this.connection);
     }
 
     /**
@@ -331,8 +299,8 @@ public class Session implements EntityManager {
         CatnapResult entityResult = new CatnapResult(entity);
 
         // get non associative field data into entity
-        List<Field> nonAssociativeFields = entityResult.getNonAssociativeFields();
-        for (Field field: nonAssociativeFields) {
+        List<Field> fields = entityResult.getFields();
+        for (Field field: fields) {
             field.setAccessible(true);
             try {
                 field.set(entity, rs.getObject(field.getName()));
@@ -348,140 +316,6 @@ public class Session implements EntityManager {
             }
         }
 
-        // get foreign key data
-        List<String> columnNames = new ArrayList<>();
-        List<String> nonAssociativeColumns = nonAssociativeFields.stream()
-                .map(Field::getName)
-                .collect(Collectors.toList());
-        try {
-            ResultSetMetaData rsMeta = rs.getMetaData();
-            int columns = rsMeta.getColumnCount();
-            for (int i = 0; i < columns; i++) {
-                String columnName = rsMeta.getColumnName(i);
-                if(!nonAssociativeColumns.contains(columnName)) {
-                    columnNames.add(columnName);
-                }
-            }
-        } catch (SQLException e) {
-            String s = "There was an error trying to get metadata on the resulting query. Got: " + e.getMessage();
-            logger.error(s);
-            throw new CatnapException(s);
-        }
-
-        for (String column: columnNames) {
-            try {
-                entityResult.addForeignKey(column, rs.getInt(column));
-            } catch (SQLException e) {
-                String s = "There was an error trying to get the foreign key field from the database. Got: " + e.getMessage();
-                logger.error(s);
-                throw new CatnapException(s);
-            }
-        }
-
         return Optional.of(entityResult);
-    }
-
-    /**
-     * This method is used to add the related entity to the field marked with the OneToOne annotation.
-     * It queries the database for all entities of the field type and searches through their foreign keys
-     * for a match.
-     *
-     * this method is called on an entity that has the form:
-     * <pre>
-     * public class RealEntity {
-     *     // other fields omitted for brevity
-     *     &#64;OneToOne(name = "realentity_id")
-     *     public OtherRealEntity otherRealEntity;
-     * }
-     * </pre>
-     *
-     * Then otherRealEntity has a foreign key with RealEntity's primary key.
-     *
-     * @param entityResult   the entity to resolve
-     */
-    private void resolveOneToOne(CatnapResult entityResult) throws CatnapException {
-        List<Field> fields = entityResult.getOneToOneFields();
-
-        for (Field field: fields) {
-            field.setAccessible(true);
-            List<CatnapResult> entities = getAllFromDatabase(field.getType());
-
-            String foreignKeyFieldName = field.getAnnotation(OneToOne.class).name();
-            int id = entityResult.getId()
-                    .orElseThrow(() -> new CatnapException("The entity of type: " + entityResult.getEntity().getClass() + "failed to get its id!"));
-
-            Optional<CatnapResult> relation = entities.stream()
-                    .filter(r -> {
-                        if(r.getForeignKey(foreignKeyFieldName).isPresent()) {
-                            return r.getForeignKey(foreignKeyFieldName).get() == id;
-                        } else {
-                            return false;
-                        }
-                    })
-                    .findFirst();
-
-            if(relation.isPresent()) {
-                try {
-                    field.set(entityResult.getEntity(), relation.get().getEntity());
-                } catch (IllegalAccessException e) {
-                    String s = "Was unable to access field: " + field.getName() + "of entity: " + entityResult.getEntityType().getName() +
-                            " when trying to set it. Got: " + e.getMessage();
-                    logger.error(s);
-                    throw new CatnapException(s);
-                }
-            }
-        }
-    }
-
-    /**
-     * This method adds the entities that an entity declares as associated to it into the relevant fields.
-     * This method can't rely on the cache having all the entities, so it queries the database for them.
-     *
-     * this method is called on an entity that has the form:
-     * <pre>
-     * public class RealEntity {
-     *     // other fields omitted for brevity
-     *     &#64;OneToMany(name = "realentity_id")
-     *     public OtherRealEntity otherRealEntity;
-     * }
-     * </pre>
-     *
-     * Then otherRealEntity has a foreign key with RealEntity's primary key.
-     *
-     * @param entityResult   the entity to resolve
-     */
-    private void resolveOneToMany(CatnapResult entityResult) throws CatnapException {
-        List<Field> fields = entityResult.getOneToManyFields();
-
-        for(Field field: fields) {
-            field.setAccessible(true);
-            ParameterizedType entityType = (ParameterizedType) field.getGenericType();
-            Class<?> entityClass = (Class<?>) entityType.getActualTypeArguments()[0];
-            List<CatnapResult> entities = getAllFromDatabase(entityClass);
-
-            String foreignKeyFieldName = field.getAnnotation(OneToMany.class).name();
-            int id = entityResult.getId()
-                    .orElseThrow(() -> new CatnapException("The entity of type: " + entityResult.getEntity().getClass() + "failed to get its id!"));
-
-            List<Object> relations = entities.stream()
-                    .filter(r -> {
-                        if(r.getForeignKey(foreignKeyFieldName).isPresent()) {
-                            return r.getForeignKey(foreignKeyFieldName).get() == id;
-                        } else {
-                            return false;
-                        }
-                    })
-                    .map(CatnapResult::getEntity)
-                    .collect(Collectors.toList());
-
-            try {
-                field.set(entityResult.getEntity(), relations);
-            } catch (IllegalAccessException e) {
-                String s = "Was unable to access field: " + field.getName() + "of entity: " + entityResult.getEntityType().getName() +
-                        " when trying to set it. Got: " + e.getMessage();
-                logger.error(s);
-                throw new CatnapException(s);
-            }
-        }
     }
 }
