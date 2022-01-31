@@ -21,8 +21,21 @@ public class AnnotationStrategy<T> implements MappingStrategy<T>{
         models.add(model);
     }
     @Override
-    public String buildSchema(){
-        return "";
+    public String buildSchema(List<Object> models){
+        StringBuilder result = new StringBuilder("");
+        models.stream().forEach(model -> {
+            try {
+                result.append(createTable(model.getClass()));
+            } catch (InvocationTargetException e) {
+                e.printStackTrace();
+            } catch (NoSuchMethodException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
+        });
+
+        return String.valueOf(result);
     }
     @Override
     public String createTable(Class clazz) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
