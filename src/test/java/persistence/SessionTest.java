@@ -288,4 +288,91 @@ public class SessionTest {
         assertEquals(gotModel.getFollowers().get(1).getId(), model4.getId());
         assertEquals(gotModel.getFollowers().get(1).getName(), model4.getName());
     }
+
+    @Test
+    public void testDelete() throws SQLException, CatnapException {
+        MockModel model = new MockModel(1, "mock");
+
+        when(this.mappingStrategy.delete(model.getClass(), model.getId())).thenReturn("");
+        when(this.connection.prepareStatement("")).thenReturn(statement);
+        when(this.statement.executeUpdate()).thenReturn(1);
+
+        this.session.delete(model);
+
+        verify(this.cache, times(1)).remove(Mockito.any(CatnapResult.class));
+    }
+
+    @Test
+    public void testDeleteSQLException() throws SQLException {
+        MockModel model = new MockModel(1, "mock");
+
+        when(this.mappingStrategy.delete(model.getClass(), model.getId())).thenReturn("");
+        when(this.connection.prepareStatement("")).thenReturn(statement);
+        when(this.statement.executeUpdate()).thenThrow(new SQLException());
+
+        assertThrows(CatnapException.class, () -> this.session.delete(model));
+    }
+
+    @Test
+    public void testPersist() throws SQLException {
+        MockModel model = new MockModel(1, "mock");
+
+        when(mappingStrategy.insert(model)).thenReturn("");
+        when(connection.prepareStatement("")).thenReturn(statement);
+        when(statement.executeUpdate()).thenReturn(1);
+
+        assertDoesNotThrow(() -> {
+            this.session.persist(model);
+        });
+
+        verify(cache, times(1)).store(Mockito.any(CatnapResult.class));
+    }
+
+    @Test
+    public void testPersistWithOneToOne() throws SQLException {
+        MockModelWithOneToOne model1 = new MockModelWithOneToOne(1, "model1");
+        MockModel model2 = new MockModel(1, "model2");
+        model1.setRelation(model2);
+
+        // first we define model1 dependencies
+        when(this.mappingStrategy.insert(model1)).thenReturn("model1");
+        when(this.connection.prepareStatement("model1")).thenReturn(this.statement);
+        when(this.statement.executeUpdate()).thenReturn(1);
+
+        // then model2 dependencies
+        when(this.mappingStrategy.insert(model2)).thenReturn("model2");
+        when(this.connection.prepareStatement("model2")).thenReturn(this.statement2);
+        when(this.statement2.executeUpdate()).thenReturn(1);
+
+        assertDoesNotThrow(() -> {
+            this.session.persist(model1);
+        });
+
+        verify(cache, times(2)).store(Mockito.any(CatnapResult.class));
+    }
+
+    @Test
+    public void testPersistWithOneToMany() throws SQLException {
+        MockModelWithOneToMany model1 = new MockModelWithOneToMany(1, "model1");
+        MockModel model2 = new MockModel(1, "model2");
+        MockModel model3 = new MockModel(2, "model3");
+        model1.addFollower(model2);
+        model1.addFollower(model3);
+
+        // first we define model1 dependencies
+        when(this.mappingStrategy.insert(model1)).thenReturn("model1");
+        when(this.connection.prepareStatement("model1")).thenReturn(this.statement);
+        when(this.statement.executeUpdate()).thenReturn(1);
+
+        //the models 2 and 3
+        when(this.mappingStrategy.insert(Mockito.any(model2.getClass()))).thenReturn("model2");
+        when(this.connection.prepareStatement("model2")).thenReturn(this.statement2);
+        when(this.statement2.executeUpdate()).thenReturn(1);
+
+        assertDoesNotThrow(() -> {
+            this.session.persist(model1);
+        });
+
+        verify(cache, times(3)).store(Mockito.any(CatnapResult.class));
+    }
 }
