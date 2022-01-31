@@ -1,5 +1,6 @@
 package persistence;
 
+import annotations.OneToMany;
 import annotations.OneToOne;
 import exceptions.CatnapException;
 import exceptions.RollbackException;
@@ -12,6 +13,7 @@ import util.SimpleConnectionPool;
 
 import javax.swing.text.html.Option;
 import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -306,8 +308,9 @@ public class Session implements EntityManager {
     }
 
     /**
-     * This method first searches the cache to see if the related entity has been loaded into the cache yet.
-     * If it hasn't, it queries the database for it by loading all the related entities and filtering through them.
+     * This method is used to add the related entity to the field marked with the OneToOne annotation.
+     * It queries the database for all entities of the field type and searches through their foreign keys
+     * for a match.
      *
      * this method is called on an entity that has the form:
      * <pre>
@@ -327,11 +330,7 @@ public class Session implements EntityManager {
 
         for (Field field: fields) {
             field.setAccessible(true);
-            List<CatnapResult> entities = cache.getAll(field.getType());
-            if(entities.isEmpty()) {
-                getAll(field.getType()); // want CatnapResult version so call this to get them in cache
-                entities = cache.getAll(field.getType());
-            }
+            List<CatnapResult> entities = getAllFromDatabase(field.getType());
 
             String foreignKeyFieldName = field.getAnnotation(OneToOne.class).name();
             int id = entityResult.getId()
@@ -382,9 +381,11 @@ public class Session implements EntityManager {
 
         for(Field field: fields) {
             field.setAccessible(true);
-            List<CatnapResult> entities = getAllFromDatabase(field.getType());
+            ParameterizedType entityType = (ParameterizedType) field.getGenericType();
+            Class<?> entityClass = (Class<?>) entityType.getActualTypeArguments()[0];
+            List<CatnapResult> entities = getAllFromDatabase(entityClass);
 
-            String foreignKeyFieldName = field.getAnnotation(OneToOne.class).name();
+            String foreignKeyFieldName = field.getAnnotation(OneToMany.class).name();
             int id = entityResult.getId()
                     .orElseThrow(() -> new CatnapException("The entity of type: " + entityResult.getEntity().getClass() + "failed to get its id!"));
 
