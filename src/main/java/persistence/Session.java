@@ -6,6 +6,7 @@ import exceptions.CatnapException;
 import exceptions.RollbackException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import util.Cache;
 import util.CatnapResult;
 import util.MappingStrategy;
@@ -16,6 +17,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -119,17 +121,89 @@ public class Session implements EntityManager {
 
     @Override
     public void delete(Object entity) throws CatnapException {
+        CatnapResult wrappedEntity = new CatnapResult(entity);
+        Optional<Integer> entityId = wrappedEntity.getId();
 
+        String sql = this.mappingStrategy.delete(
+                wrappedEntity.getEntityType(),
+                entityId.orElseThrow(() -> new CatnapException("Entity type: " + wrappedEntity.getEntityType() + " had no id field!"))
+        );
+        PreparedStatement query;
+
+        try {
+            query = this.connection.prepareStatement(sql);
+            query.executeUpdate();
+            cache.remove(wrappedEntity); // cascading the delete is done in the cache
+
+        } catch (SQLException e) {
+            String s = "There was an error performing a select on the database for entity type: " + wrappedEntity.getEntityType().getName() + ", error message:" + e.getMessage();
+            logger.error(s);
+            throw new CatnapException(s);
+        }
     }
 
     @Override
     public void persist(Object entity) throws CatnapException {
+        CatnapResult wrappedEntity = new CatnapResult(entity);
+        String sql = this.mappingStrategy.insert(entity);
 
+        PreparedStatement query;
+
+        // store entity itself
+        try {
+            query = this.connection.prepareStatement(sql);
+            query.executeUpdate();
+            cache.store(wrappedEntity); // store should also store the associated entities
+
+        } catch (SQLException e) {
+            String s = "There was an error performing a select on the database for entity type: " + wrappedEntity.getEntityType().getName() + ", error message:" + e.getMessage();
+            logger.error(s);
+            throw new CatnapException(s);
+        }
+
+        if(wrappedEntity.hasOneToOneField()) {
+            List<Field> oneToOneFields = wrappedEntity.getOneToOneFields();
+
+            for(Field f: oneToOneFields) {
+                f.setAccessible(true);
+                try {
+                    Object e = f.get(entity);
+                    persist(e, wrappedEntity.getId().orElseThrow(() -> new CatnapException("Tried to get id of " + wrappedEntity.getEntityType())));
+                } catch (IllegalAccessException ex) {
+                    String s = "Unable to access field of type: " + f.getType() + " when trying to instantiate it.";
+                    logger.error(s);
+                    throw new CatnapException(s + ", error message: " + ex.getMessage());
+                }
+            }
+        }
+
+        if(wrappedEntity.hasOneToManyField()) {
+            List<Field> oneToManyFields = wrappedEntity.getOneToManyFields();
+
+            for(Field f: oneToManyFields) {
+                f.setAccessible(true);
+                try {
+                    // this should work because it has to be a collection
+                    Collection<Object> relations = (Collection<Object>) f.get(entity);
+                    for(Object e: relations) {
+                        persist(e);
+                    }
+                } catch (IllegalAccessException e) {
+                    String s = "Unable to access field of type: " + f.getType() + " when trying to instantiate it.";
+                    logger.error(s);
+                    throw new CatnapException(s + ", error message: " + e.getMessage());
+                }
+            }
+        }
+    }
+
+    public void persist(Object entity, int id) throws NotImplementedException {
+        throw new NotImplementedException();
     }
 
     @Override
     public void update(Object entity) throws CatnapException {
-
+        String sql = this.mappingStrategy.update(entity);
     }
 
     @Override
