@@ -2,6 +2,7 @@ package persistence;
 
 import exceptions.CatnapException;
 import models.MockModel;
+import models.MockModelWithOneToMany;
 import models.MockModelWithOneToOne;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,19 +12,16 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import util.Cache;
+import util.CatnapResult;
 import util.MappingStrategy;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.times;
 
 @ExtendWith(MockitoExtension.class)
 public class SessionTest {
@@ -52,6 +50,12 @@ public class SessionTest {
     @Mock
     private ResultSet resultSet2;
 
+    @Mock
+    private ResultSetMetaData metaData;
+
+    @Mock
+    private ResultSetMetaData metaData2;
+
     @BeforeEach
     public void checkDependencies() {
         assertNotNull(connection);
@@ -66,14 +70,18 @@ public class SessionTest {
         when(mappingStrategy.get(model.getClass(), model.getId())).thenReturn("");
         when(connection.prepareStatement("")).thenReturn(statement);
         when(statement.executeQuery()).thenReturn(resultSet);
-        when(resultSet.next()).thenReturn(true);
+        when(resultSet.next()).thenReturn(true, false);
+        when(resultSet.getMetaData()).thenReturn(metaData);
+        when(metaData.getColumnCount()).thenReturn(2);
+        when(metaData.getColumnName(0)).thenReturn(model.getClass().getDeclaredFields()[0].getName());
+        when(metaData.getColumnName(1)).thenReturn(model.getClass().getDeclaredFields()[1].getName());
         when(resultSet.getObject("id")).thenReturn(model.getId());
         when(resultSet.getObject("name")).thenReturn(model.getName());
 
         Optional<Object> op = session.get(model.getClass(), model.getId());
 
         verify(cache, times(1)).contains(model.getClass(), model.getId());
-        verify(cache, times(1)).store(Mockito.any(model.getClass()));
+        verify(cache, times(1)).store(Mockito.any(CatnapResult.class));
 
         assertTrue(op.isPresent());
         MockModel gotModel = (MockModel) op.get();
@@ -87,7 +95,7 @@ public class SessionTest {
         MockModel model = new MockModel(1, "mock");
 
         when(cache.contains(model.getClass(), model.getId())).thenReturn(true);
-        when(cache.get(model.getClass(), model.getId())).thenReturn(Optional.of(model));
+        when(cache.get(model.getClass(), model.getId())).thenReturn(Optional.of(new CatnapResult(model)));
 
         Optional<Object> gotModelOp = session.get(model.getClass(), model.getId());
         MockModel gotModel = (MockModel) gotModelOp.orElse(new MockModel(2, "mock2"));
@@ -117,11 +125,23 @@ public class SessionTest {
         when(connection.prepareStatement("")).thenReturn(statement);
         when(statement.executeQuery()).thenReturn(resultSet);
         when(resultSet.next()).thenReturn(true, true, true, false);
+        when(resultSet.getMetaData()).thenReturn(metaData, metaData, metaData);
+        when(metaData.getColumnCount()).thenReturn(2, 2, 2);
+        when(metaData.getColumnName(0)).thenReturn(
+                model1.getClass().getDeclaredFields()[0].getName(),
+                model2.getClass().getDeclaredFields()[0].getName(),
+                model3.getClass().getDeclaredFields()[0].getName()
+        );
+        when(metaData.getColumnName(1)).thenReturn(
+                model1.getClass().getDeclaredFields()[1].getName(),
+                model2.getClass().getDeclaredFields()[1].getName(),
+                model3.getClass().getDeclaredFields()[1].getName()
+        );
         when(resultSet.getObject("id")).thenReturn(model1.getId(), model2.getId(), model3.getId());
         when(resultSet.getObject("name")).thenReturn(model1.getName(), model2.getName(), model3.getName());
 
         List<Object> entities = session.getAll(model1.getClass());
-        verify(cache, times(3)).store(Mockito.any(model1.getClass()));
+        verify(cache, times(1)).store(Mockito.any(List.class));
 
         assertEquals(entities.size(), 3);
 
@@ -161,42 +181,111 @@ public class SessionTest {
 
     @Test
     public void testGetWithOneToOne() throws SQLException, CatnapException {
-        MockModel model1 = new MockModel(1, "mock1");
-        MockModel model2 = new MockModel(2, "mock2");
-        MockModelWithOneToOne follower = new MockModelWithOneToOne(1, "follower");
-        follower.setLeader(model2);
+        // We have a relationship where model1 "owns" model2 but not model 3. This means that
+        // the MockModel table will have the foreign key
+        MockModelWithOneToOne model1 = new MockModelWithOneToOne(1, "model1");
+        MockModel model2 = new MockModel(1, "model2");
+        MockModel model3 = new MockModel(2, "model3");
 
-        // get call
-        when(mappingStrategy.get(follower.getClass(), follower.getId())).thenReturn("g");
-        when(connection.prepareStatement("g")).thenReturn(statement);
-        when(statement.executeQuery()).thenReturn(resultSet);
-        when(resultSet.next()).thenReturn(true);
-        when(resultSet.getObject("id")).thenReturn(follower.getId());
-        when(resultSet.getObject("name")).thenReturn(follower.getName());
-        when(resultSet.getInt("mock_id")).thenReturn(model2.getId());
+        // we want to get model1 and have the relationship resolve
+        // first we define model1 dependencies
+        when(this.mappingStrategy.get(model1.getClass(), model1.getId())).thenReturn("model1");
+        when(this.connection.prepareStatement("model1")).thenReturn(this.statement);
+        when(this.statement.executeQuery()).thenReturn(this.resultSet);
+        when(this.resultSet.next()).thenReturn(true, false);
+        when(this.resultSet.getMetaData()).thenReturn(this.metaData);
+        when(metaData.getColumnCount()).thenReturn(2);
+        when(metaData.getColumnName(0)).thenReturn(model1.getClass().getDeclaredFields()[0].getName());
+        when(metaData.getColumnName(1)).thenReturn(model1.getClass().getDeclaredFields()[1].getName());
+        when(resultSet.getObject("id")).thenReturn(model1.getId());
+        when(resultSet.getObject("name")).thenReturn(model1.getName());
 
-        // getAll call
-        when(mappingStrategy.getAll(model1.getClass())).thenReturn("a");
-        when(connection.prepareStatement("a")).thenReturn(statement2);
-        when(statement2.executeQuery()).thenReturn(resultSet2);
-        when(resultSet2.next()).thenReturn(true, true, false);
-        when(resultSet2.getObject("id")).thenReturn(model1.getId(), model2.getId());
-        when(resultSet2.getObject("name")).thenReturn(model1.getName(), model2.getName());
+        // now we define model2 and model3 dependencies
+        when(this.mappingStrategy.getAll(model2.getClass())).thenReturn("model2");
+        when(this.connection.prepareStatement("model2")).thenReturn(this.statement2);
+        when(this.statement2.executeQuery()).thenReturn(this.resultSet2);
+        when(this.resultSet2.next()).thenReturn(true, true, false);
+        when(this.resultSet2.getMetaData()).thenReturn(metaData2);
+        when(metaData2.getColumnCount()).thenReturn(3, 3);
+        when(metaData2.getColumnName(0)).thenReturn(
+                model2.getClass().getDeclaredFields()[0].getName(),
+                model3.getClass().getDeclaredFields()[0].getName()
+        );
+        when(metaData2.getColumnName(1)).thenReturn(
+                model2.getClass().getDeclaredFields()[1].getName(),
+                model3.getClass().getDeclaredFields()[1].getName()
+        );
+        when(metaData2.getColumnName(2)).thenReturn("mock_id", "mock_id");
+        when(resultSet2.getObject("id")).thenReturn(model2.getId(), model3.getId());
+        when(resultSet2.getObject("name")).thenReturn(model2.getName(), model3.getName());
+        when(resultSet2.getInt("mock_id")).thenReturn(4, 1);
 
-        Optional<Object> op = session.get(follower.getClass(), follower.getId());
+        Optional<Object> entity = this.session.get(model1.getClass(), model1.getId());
 
-        verify(cache, times(1)).store(Mockito.any(follower.getClass()));
-        verify(cache, times(2)).store(Mockito.any(model1.getClass()));
+        assertTrue(entity.isPresent());
+        MockModelWithOneToOne gotModel = (MockModelWithOneToOne) entity.get();
 
-        assertTrue(op.isPresent());
-        MockModelWithOneToOne gotModel = (MockModelWithOneToOne) op.get();
+        assertEquals(gotModel.getId(), model1.getId());
+        assertEquals(gotModel.getName(), model1.getName());
+        assertEquals(gotModel.getRelation().getId(), model3.getId());
+        assertEquals(gotModel.getRelation().getName(), model3.getName());
+    }
 
-        assertEquals(gotModel.getId(), follower.getId());
-        assertEquals(gotModel.getName(), follower.getName());
+    @Test
+    public void testGetOneToMany() throws SQLException, CatnapException {
+        // We have a relationship where model1 "owns" model2 but not model 3. This means that
+        // the MockModel table will have the foreign key
+        MockModelWithOneToMany model1 = new MockModelWithOneToMany(1, "model1");
+        MockModel model2 = new MockModel(1, "model2");
+        MockModel model3 = new MockModel(2, "model3");
+        MockModel model4 = new MockModel(3, "model4");
 
-        MockModel gotLeader = follower.getLeader();
+        // we want to get model1 and have the relationship resolve
+        // first we define model1 dependencies
+        when(this.mappingStrategy.get(model1.getClass(), model1.getId())).thenReturn("model1");
+        when(this.connection.prepareStatement("model1")).thenReturn(this.statement);
+        when(this.statement.executeQuery()).thenReturn(this.resultSet);
+        when(this.resultSet.next()).thenReturn(true, false);
+        when(this.resultSet.getMetaData()).thenReturn(this.metaData);
+        when(metaData.getColumnCount()).thenReturn(2);
+        when(metaData.getColumnName(0)).thenReturn(model1.getClass().getDeclaredFields()[0].getName());
+        when(metaData.getColumnName(1)).thenReturn(model1.getClass().getDeclaredFields()[1].getName());
+        when(resultSet.getObject("id")).thenReturn(model1.getId());
+        when(resultSet.getObject("name")).thenReturn(model1.getName());
 
-        assertEquals(gotLeader.getId(), model2.getId());
-        assertEquals(gotLeader.getName(), model2.getName());
+        // now we define model2 and model3 dependencies
+        when(this.mappingStrategy.getAll(model2.getClass())).thenReturn("model2");
+        when(this.connection.prepareStatement("model2")).thenReturn(this.statement2);
+        when(this.statement2.executeQuery()).thenReturn(this.resultSet2);
+        when(this.resultSet2.next()).thenReturn(true, true, true, false);
+        when(this.resultSet2.getMetaData()).thenReturn(metaData2);
+        when(metaData2.getColumnCount()).thenReturn(4, 4, 4);
+        when(metaData2.getColumnName(0)).thenReturn(
+                model2.getClass().getDeclaredFields()[0].getName(),
+                model3.getClass().getDeclaredFields()[0].getName(),
+                model4.getClass().getDeclaredFields()[0].getName()
+        );
+        when(metaData2.getColumnName(1)).thenReturn(
+                model2.getClass().getDeclaredFields()[1].getName(),
+                model3.getClass().getDeclaredFields()[1].getName(),
+                model4.getClass().getDeclaredFields()[1].getName()
+        );
+        when(metaData2.getColumnName(2)).thenReturn("mock_id", "mock_id", "mock_id");
+        when(resultSet2.getObject("id")).thenReturn(model2.getId(), model3.getId(), model4.getId());
+        when(resultSet2.getObject("name")).thenReturn(model2.getName(), model3.getName(), model4.getName());
+        when(resultSet2.getInt("mock_id")).thenReturn(4, 1, 1);
+
+        Optional<Object> entity = this.session.get(model1.getClass(), model1.getId());
+
+        assertTrue(entity.isPresent());
+
+        MockModelWithOneToMany gotModel = (MockModelWithOneToMany) entity.get();
+
+        assertEquals(gotModel.getFollowers().size(), 2);
+
+        assertEquals(gotModel.getFollowers().get(0).getId(), model3.getId());
+        assertEquals(gotModel.getFollowers().get(0).getName(), model3.getName());
+        assertEquals(gotModel.getFollowers().get(1).getId(), model4.getId());
+        assertEquals(gotModel.getFollowers().get(1).getName(), model4.getName());
     }
 }
