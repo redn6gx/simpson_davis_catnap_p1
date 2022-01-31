@@ -14,6 +14,7 @@ import java.util.*;
 
 public class AnnotationStrategy<T> implements MappingStrategy<T>{
     private final static Logger logger = LogManager.getLogger(AnnotationStrategy.class);
+    private static List<Object> models = new ArrayList<>();
 
     @Override
     public String createTable(Class clazz) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
