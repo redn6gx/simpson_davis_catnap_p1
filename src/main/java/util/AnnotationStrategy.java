@@ -17,7 +17,8 @@ public class AnnotationStrategy<T> implements MappingStrategy<T>{
     private static List<Object> models = new ArrayList<>();
 
     @Override
-    public void AddModel(Object model){
+    public void addModel(Object model){
+        models.add(model);
     }
     @Override
     public String buildSchema(){
