@@ -2,6 +2,7 @@ package util;
 
 import annotations.Entity;
 import annotations.Id;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -127,5 +128,21 @@ public class AnnotationStrategyTest{
                 "  horsePower INTEGER,\n" +
                 "  primary key (carId)\n" +
                 ");", result);
+    }
+    @Test
+    public void testAddModel(){
+        AnnotationStrategy aS = new AnnotationStrategy();
+        Animal animal = new Animal();
+        Car car = new Car();
+
+        assertEquals(0, models1.size());
+        models1.add(aS.addModel(animal));
+        models1.add(aS.addModel(car));
+        assertEquals(2, models1.size());
+    }
+
+    @AfterAll
+    public void cleanUp(){
+        models1.clear();
     }
 }
