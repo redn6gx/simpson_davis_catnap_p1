@@ -17,6 +17,13 @@ public class AnnotationStrategy<T> implements MappingStrategy<T>{
     private static List<Object> models = new ArrayList<>();
 
     @Override
+    public void AddModel(Object model){
+    }
+    @Override
+    public String buildSchema(){
+        return "";
+    }
+    @Override
     public String createTable(Class clazz) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
         StringBuilder query = new StringBuilder("CREATE TABLE ");
         query.append(getTableName(clazz)).append(" (\n");
