@@ -267,9 +267,11 @@ public class Session implements EntityManager {
 
     /**
      * This method releases the connection this EntityManager was using
+     *
+     * @throws CatnapException     thrown when the SessionFactory hasn't been built yet
      */
     @Override
-    public void close() {
+    public void close() throws CatnapException {
         SessionFactory.getInstance().releaseConnection(this.connection);
     }
 
