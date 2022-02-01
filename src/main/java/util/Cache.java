@@ -1,5 +1,7 @@
 package util;
 
+import exceptions.CatnapException;
+
 import java.util.Collection;
 import java.util.Optional;
 
@@ -28,20 +30,20 @@ public interface Cache<T> {
      *
      * @param t  the entity to store in the cache
      */
-    public void store(T t);
+    public void store(T t) throws CatnapException;
 
     /**
      * This method stores a collection of entities into the cache.
      *
      * @param entities        a collection of entities to store
      */
-    public void store(Collection<T> entities);
+    public void store(Collection<T> entities) throws CatnapException;
 
     /**
      * This method removes an entity from the cache.
      *
      * @param entity          the entity to remove
      */
-    public void remove(CatnapResult entity);
+    public void remove(CatnapResult entity) throws CatnapException;
 
 }
