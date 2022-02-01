@@ -1,5 +1,6 @@
 package persistence;
 
+import exceptions.CatnapException;
 import exceptions.ConnectionFailedException;
 import util.ConnectionPool;
 import util.L1Cache;
@@ -17,7 +18,11 @@ public class SessionFactory implements EntityManagerFactory {
 
     private static SessionFactory instance = null;
 
-    public static SessionFactory getInstance() {
+    public static SessionFactory getInstance() throws CatnapException {
+        if(instance == null) {
+            throw new CatnapException("You need to call build first to use the SessionFactory!");
+        }
+
         return instance;
     }
 
