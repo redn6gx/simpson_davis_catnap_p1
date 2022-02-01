@@ -86,6 +86,8 @@ public interface EntityManager {
 
     /**
      * This ends the session, releasing any connections to the database that this session had.
+     *
+     * @throws CatnapException     thrown when the SessionFactory hasn't been built yet
      */
-    public void close();
+    public void close() throws CatnapException;
 }
