@@ -117,7 +117,7 @@ public class AnnotationStrategy<T> implements MappingStrategy<T>{
             }
             count++;
         }
-        query.append(");");
+        query.append(") RETURNING *;");
 
         return String.valueOf(query);
     }
@@ -179,7 +179,7 @@ public class AnnotationStrategy<T> implements MappingStrategy<T>{
             }
             count++;
         }
-        query.append(pkFieldName + " = " + pkValue + ";");
+        query.append(pkFieldName + " = " + pkValue + " RETURNING *;");
 
         return String.valueOf(query);
     }
@@ -196,7 +196,7 @@ public class AnnotationStrategy<T> implements MappingStrategy<T>{
                 pkFieldName = f.getName();
             }
         }
-        query.append(pkFieldName + " = " + id + ";");
+        query.append(pkFieldName + " = " + id + " RETURNING *;");
 
         return String.valueOf(query);
     }
