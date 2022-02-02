@@ -3,7 +3,7 @@ package persistence;
 import exceptions.CatnapException;
 import exceptions.ConnectionFailedException;
 import util.ConnectionPool;
-import util.L1Cache;
+import util.CatnapCache;
 import util.MappingStrategy;
 
 import java.sql.Connection;
@@ -42,7 +42,7 @@ public class SessionFactory implements EntityManagerFactory {
 
     @Override
     public EntityManager createEntityManager() throws ConnectionFailedException {
-        return new Session(this.connectionPool.getConnection(), this.mappingStrategy, new L1Cache());
+        return new Session(this.connectionPool.getConnection(), this.mappingStrategy, new CatnapCache());
     }
 
     @Override
