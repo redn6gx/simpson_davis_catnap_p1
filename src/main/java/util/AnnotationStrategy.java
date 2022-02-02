@@ -2,6 +2,7 @@ package util;
 
 import annotations.Entity;
 import annotations.Id;
+import exceptions.ConnectionFailedException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -189,7 +190,20 @@ public class AnnotationStrategy<T> implements MappingStrategy<T>{
         return String.valueOf(query);
     }
 
-    //Helper Methods
+    //HELPER METHODS
+    /**
+     * This is a helper method that retrieves the table name from the class provided.
+     * Reflection is used to get check the @Entity annotation and execute its property
+     * method to retrieve the value. The table name is set to the values retrieved.
+     * If the value is equal to the default, "none", then the class name is used as the
+     * table name instead.
+     *
+     * @return a String with the table's name.
+     * @throws IllegalAccessException occurs if the method being executed through reflection is inaccessible.
+     * @throws InvocationTargetException occurs if the method being executed through reflection cannot be found.
+     * @throws NoSuchMethodException occurs if the @Entity property method is not found through reflection.
+     * @param clazz the class to retrieve the table name from.
+     */
     private String getTableName(Class clazz) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         Object tableName = null;
         Annotation annotation = clazz.getAnnotation(Entity.class);
@@ -198,6 +212,14 @@ public class AnnotationStrategy<T> implements MappingStrategy<T>{
 
         return !tableName.equals("none") ? tableName + "" : clazz.getSimpleName();
     }
+
+    /**
+     * This is a helper method that checks to see if a sql value should be wrapped in single quotes.
+     * If the datatype matches either a String, Character, or char, then the method returns true.
+     *
+     * @return a boolean indicating if the datatype should be wrapped in single quotes.
+     * @param dataType the name of the variable's datatype.
+     */
     private boolean hasSingleQuotes(String dataType){
         if("java.lang.String".equals(dataType) || "java.lang.Character".equals(dataType) || "char".equals(dataType)) {
             return true;
