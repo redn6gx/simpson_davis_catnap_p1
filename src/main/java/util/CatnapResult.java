@@ -25,7 +25,13 @@ public class CatnapResult {
         return entity;
     }
 
-    public Class<?> getEntityType() { return entity.getClass(); }
+    public Class<?> getEntityType() throws CatnapException {
+        try {
+            return entity.getClass();
+        } catch (NullPointerException e) {
+            throw new CatnapException("Entity was null! Got: " + e.getMessage());
+        }
+    }
 
     /**
      * This method returns an Optional containing the id of the entity if it finds the id field.
@@ -52,10 +58,14 @@ public class CatnapResult {
      *
      * @return                a field object containing the entity's id field
      */
-    public Optional<Field> getIdField() {
-        return Arrays.stream(this.entity.getClass().getDeclaredFields())
-                .filter(field -> field.isAnnotationPresent(Id.class))
-                .findFirst();
+    public Optional<Field> getIdField() throws CatnapException {
+        try {
+            return Arrays.stream(this.entity.getClass().getDeclaredFields())
+                    .filter(field -> field.isAnnotationPresent(Id.class))
+                    .findFirst();
+        } catch (NullPointerException e) {
+            throw new CatnapException("Entity was null! Got: " + e.getMessage());
+        }
     }
 
     /**
@@ -63,7 +73,11 @@ public class CatnapResult {
      *
      * @return               a list of the declared fields
      */
-    public List<Field> getFields() {
-        return Arrays.stream(this.entity.getClass().getDeclaredFields()).collect(Collectors.toList());
+    public List<Field> getFields() throws CatnapException {
+        try {
+            return Arrays.stream(this.entity.getClass().getDeclaredFields()).collect(Collectors.toList());
+        } catch (NullPointerException e) {
+            throw new CatnapException("Entity was null! Got: " + e.getMessage());
+        }
     }
 }

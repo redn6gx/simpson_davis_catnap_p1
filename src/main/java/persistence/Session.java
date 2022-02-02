@@ -4,10 +4,7 @@ import exceptions.CatnapException;
 import exceptions.RollbackException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import util.Cache;
-import util.CatnapResult;
-import util.MappingStrategy;
-import util.SimpleConnectionPool;
+import util.*;
 
 import java.lang.reflect.Field;
 import java.sql.*;
@@ -88,7 +85,9 @@ public class Session implements EntityManager {
             }
 
             entityOp = buildEntity(clazz, rs);
-            entityOp.ifPresent(cache::store);
+            if(entityOp.isPresent()) {
+                cache.store(entityOp.get());
+            }
         }
 
         return entityOp.map(CatnapResult::getEntity);
@@ -152,7 +151,7 @@ public class Session implements EntityManager {
 
         String sql = this.mappingStrategy.delete(
                 wrappedEntity.getEntityType(),
-                entityId.orElseThrow(() -> new CatnapException("Entity type: " + wrappedEntity.getEntityType() + " had no id field!"))
+                entityId.orElseThrow(() -> new CatnapException("Entity type: " + entity.getClass() + " had no id field!"))
         );
         PreparedStatement query;
 

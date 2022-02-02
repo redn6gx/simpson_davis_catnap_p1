@@ -215,7 +215,7 @@ public class SessionTest {
     }
 
     @Test
-    public void testPersist() throws SQLException {
+    public void testPersist() throws SQLException, CatnapException {
         MockModel model = new MockModel(1, "mock");
 
         when(mappingStrategy.insert(model)).thenReturn("");
@@ -230,7 +230,7 @@ public class SessionTest {
     }
 
     @Test
-    public void testPersistSQLException() throws SQLException {
+    public void testPersistSQLException() throws SQLException, CatnapException {
         MockModel model = new MockModel(1, "mock");
 
         when(mappingStrategy.insert(model)).thenReturn("");
@@ -245,7 +245,7 @@ public class SessionTest {
     }
 
     @Test
-    public void testUpdate() throws SQLException {
+    public void testUpdate() throws SQLException, CatnapException {
         MockModel model = new MockModel(1, "mock");
 
         when(mappingStrategy.update(model)).thenReturn("");
@@ -260,7 +260,7 @@ public class SessionTest {
     }
 
     @Test
-    public void testUpdateSQLEXception() throws SQLException {
+    public void testUpdateSQLEXception() throws SQLException, CatnapException {
         MockModel model = new MockModel(1, "mock");
 
         when(mappingStrategy.update(model)).thenReturn("");
