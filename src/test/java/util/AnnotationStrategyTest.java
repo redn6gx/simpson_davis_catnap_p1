@@ -3,6 +3,7 @@ package util;
 import annotations.Entity;
 import annotations.Id;
 import annotations.Length;
+import annotations.OrderBy;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -27,8 +28,11 @@ public class AnnotationStrategyTest {
         public Boolean scales = false;
         @Length
         public String eyeColor = "blue";
+        @OrderBy
         public int numOfTeeth = 26;
+        @OrderBy
         public Integer numOfLegs = 4;
+        @OrderBy
         public Double weight = 212.07;
         public double weight2 = 160.12;
     }
@@ -90,7 +94,7 @@ public class AnnotationStrategyTest {
         Class animal = Animal.class;
         String result = aS.getAll(animal);
 
-        assertEquals("SELECT * FROM Animals;", result);
+        assertEquals("SELECT * FROM Animals ORDER BY numOfTeeth ASC, numOfLegs ASC, weight ASC;", result);
     }
     @Test
     public void testGet() throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {

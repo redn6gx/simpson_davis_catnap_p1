@@ -3,6 +3,7 @@ package util;
 import annotations.Entity;
 import annotations.Id;
 import annotations.Length;
+import annotations.OrderBy;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -142,7 +143,25 @@ public class AnnotationStrategy<T> implements MappingStrategy<T>{
     @Override
     public String getAll(Class clazz) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
         StringBuilder query = new StringBuilder("SELECT * FROM ");
-        query.append(getTableName(clazz) + ";");
+        query.append(getTableName(clazz));
+
+        int count = 0;
+        Field[] fields = clazz.getFields();
+        for(Field f : fields) {
+            if (f.isAnnotationPresent(OrderBy.class)) {
+                Object direction = null;
+                Annotation annotation = f.getAnnotation(OrderBy.class);
+                Method m = annotation.annotationType().getMethod("direction");
+                direction = m.invoke(annotation);
+                if(count == 0){
+                    query.append(" ORDER BY " + f.getName() + " " + direction);
+                }else if(count > 0){
+                    query.append(", " + f.getName() + " " + direction);
+                }
+                count++;
+            }
+        }
+        query.append(";");
 
         return String.valueOf(query);
     }
