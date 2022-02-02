@@ -29,22 +29,6 @@ public interface MappingStrategy<T> {
     public String buildSchema(List<Object> models) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException;
 
     /**
-     * This method is used to generate a create table sql statement for a class. This method utilizes reflection to
-     * check the data types of the properties inside a class and then maps them to the corresponding postgresql
-     * data types. The file resources.mapping.properties is used to look up the correct data type mappings.
-     * The variable names for each property are used as the data column names in postgresql. Variable names are
-     * also retrieved through reflection.
-     * Makes use of the getTableName() helper method.
-     *
-     * @return a String containing the generated sql create table statement.
-     * @throws InvocationTargetException Helper method getTableName() throws this exception.
-     * @throws NoSuchMethodException Helper method getTableName() throws this exception.
-     * @throws IllegalAccessException Helper method getTableName() throws this exception.
-     * @param clazz the class to be translated into a create table statement.
-     */
-    public String createTable(Class clazz) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException;
-
-    /**
      * This method is used to generate a sql insert statement for a new instance of an entity that is to be added to a
      * database table. Reflection is used to get the values of the properties inside a class and generate the
      * sql statement accordingly. This method also uses reflection to check if the @Id annotation is present. If the @Id
