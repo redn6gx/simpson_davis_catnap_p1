@@ -270,12 +270,12 @@ public class AnnotationStrategy<T> implements MappingStrategy<T>{
      * property method belonging to the annotation and inserted into the sql String.
      * If no @Length annotation is present, then the size is set to '(50)';
      *
-     * @return a String with the table's name.
+     * @return a String with the mapping to VARCHAR with specified size.
      * @throws IllegalAccessException occurs if the method being executed through reflection is inaccessible.
      * @throws InvocationTargetException occurs if the method being executed through reflection cannot be found.
      * @throws NoSuchMethodException occurs if the @Entity property method is not found through reflection.
-     * @param props the class to retrieve the table name from.
-     * @param f the field to
+     * @param props Properties Object referencing mapping.properties.
+     * @param f the field to map.
      */
     private String handleString(Properties props, Field f) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         if(f.isAnnotationPresent(Length.class)) {
