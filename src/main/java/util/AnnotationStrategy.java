@@ -2,6 +2,7 @@ package util;
 
 import annotations.Entity;
 import annotations.Id;
+import annotations.Length;
 import exceptions.ConnectionFailedException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,6 +24,7 @@ public class AnnotationStrategy<T> implements MappingStrategy<T>{
 
         return model;
     }
+
     @Override
     public String buildSchema(List<Object> models){
         StringBuilder result = new StringBuilder("");
@@ -40,6 +42,7 @@ public class AnnotationStrategy<T> implements MappingStrategy<T>{
 
         return String.valueOf(result);
     }
+
     @Override
     public String createTable(Class clazz) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
         StringBuilder query = new StringBuilder("CREATE TABLE ");
@@ -63,14 +66,18 @@ public class AnnotationStrategy<T> implements MappingStrategy<T>{
                 query.append("serial");
                 hasPk = true;
                 pkName = fieldName;
-            }else{
-                query.append(props.getProperty(f.getType().getName()));
+            }else if(f.getType().getSimpleName().equals("String")){
+                query.append(handleString(props, f));
+            }
+            else{
+                query.append(props.getProperty(f.getType().getSimpleName()));
             }
             if(!(count == fields.length)){
                 query.append(",\n");
             }
             count++;
         }
+
         if(hasPk){
             query.append(",\n  primary key (").append(pkName).append(")");
         }
@@ -78,6 +85,7 @@ public class AnnotationStrategy<T> implements MappingStrategy<T>{
 
         return String.valueOf(query);
     }
+
     @Override
     public String insert(Object instanceObject) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
         StringBuilder query = new StringBuilder("INSERT INTO ");
@@ -114,6 +122,7 @@ public class AnnotationStrategy<T> implements MappingStrategy<T>{
 
         return String.valueOf(query);
     }
+
     @Override
     public String get(Class clazz, int id) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
         StringBuilder query = new StringBuilder("SELECT * FROM ");
@@ -130,6 +139,7 @@ public class AnnotationStrategy<T> implements MappingStrategy<T>{
 
         return String.valueOf(query);
     }
+
     @Override
     public String getAll(Class clazz) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
         StringBuilder query = new StringBuilder("SELECT * FROM ");
@@ -137,6 +147,7 @@ public class AnnotationStrategy<T> implements MappingStrategy<T>{
 
         return String.valueOf(query);
     }
+
     @Override
     public String update(Object instanceObject) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
         StringBuilder query = new StringBuilder("UPDATE ");
@@ -173,6 +184,7 @@ public class AnnotationStrategy<T> implements MappingStrategy<T>{
 
         return String.valueOf(query);
     }
+
     @Override
     public String delete(Class clazz, int id) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
         StringBuilder query = new StringBuilder("DELETE FROM ");
@@ -211,6 +223,18 @@ public class AnnotationStrategy<T> implements MappingStrategy<T>{
         tableName = m.invoke(annotation);
 
         return !tableName.equals("none") ? tableName + "" : clazz.getSimpleName();
+    }
+
+    private String handleString(Properties props, Field f) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+        if(f.isAnnotationPresent(Length.class)) {
+            Object size = null;
+            Annotation annotation = f.getAnnotation(Length.class);
+            Method m = annotation.annotationType().getMethod("size");
+            size = m.invoke(annotation);
+            return props.getProperty(f.getType().getSimpleName()) + "(" + size + ")";
+        }else{
+            return props.getProperty(f.getType().getSimpleName()) + "(50)";
+        }
     }
 
     /**
