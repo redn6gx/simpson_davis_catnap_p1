@@ -3,7 +3,6 @@ package util;
 import annotations.Entity;
 import annotations.Id;
 import annotations.Length;
-import exceptions.ConnectionFailedException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

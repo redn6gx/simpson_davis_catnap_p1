@@ -2,6 +2,7 @@ package util;
 
 import annotations.Entity;
 import annotations.Id;
+import annotations.Length;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -11,10 +12,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class AnnotationStrategyTest{
+public class AnnotationStrategyTest {
     private static List<Object> models1 = new ArrayList<>();
     private static List<Object> models2 = new ArrayList<>();
 
@@ -24,6 +25,7 @@ public class AnnotationStrategyTest{
         public int animalId = 12345;
         public boolean fur = true;
         public Boolean scales = false;
+        @Length
         public String eyeColor = "blue";
         public int numOfTeeth = 26;
         public Integer numOfLegs = 4;
