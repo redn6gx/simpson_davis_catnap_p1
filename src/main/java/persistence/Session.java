@@ -31,7 +31,7 @@ public class Session implements EntityManager {
     private final MappingStrategy mappingStrategy;
     private final Cache cache;
 
-    private final static Logger logger = LogManager.getLogger(SimpleConnectionPool.class);
+    private final static Logger logger = LogManager.getLogger(Session.class);
 
     public Session(Connection connection, MappingStrategy mappingStrategy, Cache cache) {
         this.connection = connection;
