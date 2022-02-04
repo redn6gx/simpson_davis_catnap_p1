@@ -9,14 +9,16 @@ import org.mockito.Mock;
 import util.ConnectionPool;
 import util.MappingStrategy;
 
+import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class SessionFactoryTest {
 
-    public class MockMappingStrategy implements MappingStrategy {
+    public class MockMappingStrategy<T> implements MappingStrategy<T> {
         @Override
         public String get(Class clazz, int id) {
             return null;
@@ -24,6 +26,16 @@ public class SessionFactoryTest {
 
         @Override
         public String delete(Class clazz, int id) {
+            return null;
+        }
+
+        @Override
+        public Object addModel(Object model) {
+            return null;
+        }
+
+        @Override
+        public String buildSchema(List<Object> models) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
             return null;
         }
 
