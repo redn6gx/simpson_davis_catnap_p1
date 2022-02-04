@@ -1,114 +1,50 @@
 package persistence;
 
-import exceptions.CatnapException;
 import exceptions.ConnectionFailedException;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import util.ConnectionPool;
 import util.MappingStrategy;
 
-import java.lang.reflect.InvocationTargetException;
-import java.sql.Connection;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@ExtendWith(MockitoExtension.class)
 public class SessionFactoryTest {
 
-    public class MockMappingStrategy implements MappingStrategy {
-        @Override
-        public String get(Class clazz, int id) {
-            return null;
-        }
+    @InjectMocks
+    private SessionFactory factory;
 
-        @Override
-        public String delete(Class clazz, int id) {
-            return null;
-        }
-
-        @Override
-        public Object addModel(Object model) {
-            return null;
-        }
-
-        @Override
-        public String buildSchema(List<Object> models) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
-            return null;
-        }
-
-        @Override
-        public String insert(Object entity) {
-            return null;
-        }
-
-        @Override
-        public String update(Object entity) {
-            return null;
-        }
-
-        @Override
-        public String getAll(Class clazz) {
-            return null;
-        }
-    }
-
-    public class MockConnectionPool implements ConnectionPool {
-        @Override
-        public void connect() throws ConnectionFailedException {
-
-        }
-
-        @Override
-        public Connection getConnection() throws ConnectionFailedException {
-            return null;
-        }
-
-        @Override
-        public void releaseConnection(Connection connection) {
-
-        }
-
-        @Override
-        public void shutdown() {
-
-        }
-    }
-
+    @Mock
     private ConnectionPool mockConnectionPool;
+
+    @Mock
     private MappingStrategy mockMappingStrategy;
 
-    @BeforeEach
-    public void testInit() {
-        mockConnectionPool = new MockConnectionPool();
-        mockMappingStrategy = new MockMappingStrategy();
-        SessionFactory.build(mockConnectionPool, mockMappingStrategy);
-    }
-
     @Test
-    public void testCreateEntityManager() throws ConnectionFailedException, CatnapException {
-        SessionFactory factory = SessionFactory.getInstance();
+    public void testCreateEntityManager() throws ConnectionFailedException {
 
         EntityManager session = factory.createEntityManager();
-
         assertTrue(session instanceof Session);
     }
 
     @Test
-    public void testCreateEntityManagerWithSessionId() throws CatnapException, ConnectionFailedException {
+    public void testCreateEntityManagerWithSessionId() throws ConnectionFailedException {
+
         String id = "id";
-        SessionFactory factory = SessionFactory.getInstance();
         EntityManager session = factory.createEntityManager(id);
 
         assertTrue(session instanceof Session);
     }
 
     @Test
-    public void testGetSessionContext() throws CatnapException, ConnectionFailedException {
+    public void testGetSessionContext() throws ConnectionFailedException {
+
         String id = "id";
-        SessionFactory factory = SessionFactory.getInstance();
         EntityManager session = factory.createEntityManager(id);
         EntityManager session2 = factory.getSessionContext(id);
 
@@ -116,9 +52,9 @@ public class SessionFactoryTest {
     }
 
     @Test
-    public void testGetSessionContextBeforeExists() throws CatnapException, ConnectionFailedException {
+    public void testGetSessionContextBeforeExists() throws ConnectionFailedException {
+
         String id = "id";
-        SessionFactory factory = SessionFactory.getInstance();
         EntityManager session = factory.getSessionContext(id);
         EntityManager session2 = factory.getSessionContext(id);
 
