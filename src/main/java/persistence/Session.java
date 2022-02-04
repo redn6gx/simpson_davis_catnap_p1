@@ -4,12 +4,10 @@ import exceptions.CatnapException;
 import exceptions.RollbackException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import util.Cache;
-import util.CatnapResult;
-import util.MappingStrategy;
-import util.SimpleConnectionPool;
+import util.*;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,11 +30,11 @@ public class Session implements EntityManager {
 
     private final Connection connection;
     private final MappingStrategy mappingStrategy;
-    private final Cache cache;
+    private final CatnapCache cache;
 
-    private final static Logger logger = LogManager.getLogger(SimpleConnectionPool.class);
+    private final static Logger logger = LogManager.getLogger(Session.class);
 
-    public Session(Connection connection, MappingStrategy mappingStrategy, Cache cache) {
+    public Session(Connection connection, MappingStrategy mappingStrategy, CatnapCache cache) {
         this.connection = connection;
         this.mappingStrategy = mappingStrategy;
         this.cache = cache;
@@ -63,7 +61,14 @@ public class Session implements EntityManager {
         if(cache.contains(clazz, id)) {
             entityOp = cache.get(clazz, id);
         } else {
-            String sql = this.mappingStrategy.get(clazz, id);
+            String sql;
+            try {
+                sql = this.mappingStrategy.get(clazz, id);
+            } catch (InvocationTargetException | NoSuchMethodException | IllegalAccessException e) {
+                String s = "There was an error trying to get a model of type: " + clazz.getName() + ", got: " + e.getMessage();
+                throw new CatnapException(s);
+            }
+
             PreparedStatement query;
             ResultSet rs;
 
@@ -88,7 +93,9 @@ public class Session implements EntityManager {
             }
 
             entityOp = buildEntity(clazz, rs);
-            entityOp.ifPresent(cache::store);
+            if(entityOp.isPresent()) {
+                cache.store(entityOp.get());
+            }
         }
 
         return entityOp.map(CatnapResult::getEntity);
@@ -105,7 +112,13 @@ public class Session implements EntityManager {
      */
     @Override
     public List<Object> getAll(Class<?> clazz) throws CatnapException {
-        String sql = this.mappingStrategy.getAll(clazz);
+        String sql = null;
+        try {
+            sql = this.mappingStrategy.getAll(clazz);
+        } catch (InvocationTargetException | NoSuchMethodException | IllegalAccessException e) {
+            String s = "There was an error trying to get all of a model of type: " + clazz.getName() + ", got: " + e.getMessage();
+            throw new CatnapException(s);
+        }
         PreparedStatement query;
         ResultSet rs;
 
@@ -150,10 +163,16 @@ public class Session implements EntityManager {
         CatnapResult wrappedEntity = new CatnapResult(entity);
         Optional<Integer> entityId = wrappedEntity.getId();
 
-        String sql = this.mappingStrategy.delete(
-                wrappedEntity.getEntityType(),
-                entityId.orElseThrow(() -> new CatnapException("Entity type: " + wrappedEntity.getEntityType() + " had no id field!"))
-        );
+        String sql = null;
+        try {
+            sql = this.mappingStrategy.delete(
+                    wrappedEntity.getEntityType(),
+                    entityId.orElseThrow(() -> new CatnapException("Entity type: " + entity.getClass() + " had no id field!"))
+            );
+        } catch (InvocationTargetException | NoSuchMethodException | IllegalAccessException e) {
+            String s = "There was an error trying to delete a model of type: " + wrappedEntity.getEntityType().getName() + ", got: " + e.getMessage();
+            throw new CatnapException(s);
+        }
         PreparedStatement query;
 
         try {
@@ -177,7 +196,13 @@ public class Session implements EntityManager {
     @Override
     public void persist(Object entity) throws CatnapException {
         CatnapResult wrappedEntity = new CatnapResult(entity);
-        String sql = this.mappingStrategy.insert(entity);
+        String sql = null;
+        try {
+            sql = this.mappingStrategy.insert(entity);
+        } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+            String s = "There was an error trying to persist a model of type: " + wrappedEntity.getEntityType().getName() + ", got: " + e.getMessage();
+            throw new CatnapException(s);
+        }
 
         PreparedStatement query;
 
@@ -203,7 +228,13 @@ public class Session implements EntityManager {
     @Override
     public void update(Object entity) throws CatnapException {
         CatnapResult wrappedEntity = new CatnapResult(entity);
-        String sql = this.mappingStrategy.update(entity);
+        String sql = null;
+        try {
+            sql = this.mappingStrategy.update(entity);
+        } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+            String s = "There was an error trying to update a model of type: " + wrappedEntity.getEntityType().getName() + ", got: " + e.getMessage();
+            throw new CatnapException(s);
+        }
 
         PreparedStatement query;
 

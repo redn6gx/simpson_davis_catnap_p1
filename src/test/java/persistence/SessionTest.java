@@ -1,6 +1,7 @@
 package persistence;
 
 import exceptions.CatnapException;
+import exceptions.RollbackException;
 import models.MockModel;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -9,10 +10,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import util.Cache;
+import util.CatnapCache;
 import util.CatnapResult;
 import util.MappingStrategy;
 
+import java.lang.reflect.InvocationTargetException;
 import java.sql.*;
 import java.util.List;
 import java.util.Optional;
@@ -34,7 +36,7 @@ public class SessionTest {
     private MappingStrategy mappingStrategy;
 
     @Mock
-    private Cache cache;
+    private CatnapCache cache;
 
     @Mock
     private PreparedStatement statement;
@@ -50,7 +52,7 @@ public class SessionTest {
     }
 
     @Test
-    public void testGet() throws SQLException, CatnapException {
+    public void testGet() throws SQLException, CatnapException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
         MockModel model = new MockModel(1, "mock");
 
         when(mappingStrategy.get(model.getClass(), model.getId())).thenReturn("");
@@ -87,7 +89,7 @@ public class SessionTest {
     }
 
     @Test
-    public void testGetNone() throws CatnapException, SQLException {
+    public void testGetNone() throws CatnapException, SQLException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
         MockModel model = new MockModel(1, "mock");
 
         when(mappingStrategy.get(model.getClass(), model.getId())).thenReturn("");
@@ -102,7 +104,7 @@ public class SessionTest {
     }
 
     @Test
-    public void testGetSQLException() throws SQLException {
+    public void testGetSQLException() throws SQLException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
         MockModel model = new MockModel(1, "mock");
 
         when(mappingStrategy.get(model.getClass(), model.getId())).thenReturn("");
@@ -113,7 +115,7 @@ public class SessionTest {
     }
 
     @Test
-    public void testGetResultSetSQLException() throws SQLException {
+    public void testGetResultSetSQLException() throws SQLException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
         MockModel model = new MockModel(1, "mock");
 
         when(mappingStrategy.get(model.getClass(), model.getId())).thenReturn("");
@@ -125,7 +127,7 @@ public class SessionTest {
     }
 
     @Test
-    public void testGetAll() throws SQLException, CatnapException {
+    public void testGetAll() throws SQLException, CatnapException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
         MockModel model1 = new MockModel(1, "mock1");
         MockModel model2 = new MockModel(2, "mock2");
         MockModel model3 = new MockModel(3, "mock3");
@@ -152,7 +154,7 @@ public class SessionTest {
     }
 
     @Test
-    public void testGetAllNone() throws SQLException, CatnapException {
+    public void testGetAllNone() throws SQLException, CatnapException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
         MockModel model = new MockModel(1, "mock");
 
         when(this.mappingStrategy.getAll(model.getClass())).thenReturn("");
@@ -166,7 +168,7 @@ public class SessionTest {
     }
 
     @Test
-    public void testGetAllNoneSQLException() throws SQLException {
+    public void testGetAllNoneSQLException() throws SQLException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
         MockModel model = new MockModel(1, "mock");
 
         when(this.mappingStrategy.getAll(model.getClass())).thenReturn("");
@@ -180,7 +182,7 @@ public class SessionTest {
     }
 
     @Test
-    public void testGetAllSQLException() throws SQLException {
+    public void testGetAllSQLException() throws SQLException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
         MockModel model = new MockModel(1, "mock");
 
         when(mappingStrategy.getAll(model.getClass())).thenReturn("");
@@ -191,7 +193,7 @@ public class SessionTest {
     }
 
     @Test
-    public void testDelete() throws SQLException, CatnapException {
+    public void testDelete() throws SQLException, CatnapException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
         MockModel model = new MockModel(1, "mock");
 
         when(this.mappingStrategy.delete(model.getClass(), model.getId())).thenReturn("");
@@ -204,7 +206,7 @@ public class SessionTest {
     }
 
     @Test
-    public void testDeleteSQLException() throws SQLException {
+    public void testDeleteSQLException() throws SQLException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
         MockModel model = new MockModel(1, "mock");
 
         when(this.mappingStrategy.delete(model.getClass(), model.getId())).thenReturn("");
@@ -215,7 +217,7 @@ public class SessionTest {
     }
 
     @Test
-    public void testPersist() throws SQLException {
+    public void testPersist() throws SQLException, CatnapException, InvocationTargetException, IllegalAccessException, NoSuchMethodException {
         MockModel model = new MockModel(1, "mock");
 
         when(mappingStrategy.insert(model)).thenReturn("");
@@ -230,7 +232,7 @@ public class SessionTest {
     }
 
     @Test
-    public void testPersistSQLException() throws SQLException {
+    public void testPersistSQLException() throws SQLException, CatnapException, InvocationTargetException, IllegalAccessException, NoSuchMethodException {
         MockModel model = new MockModel(1, "mock");
 
         when(mappingStrategy.insert(model)).thenReturn("");
@@ -245,7 +247,7 @@ public class SessionTest {
     }
 
     @Test
-    public void testUpdate() throws SQLException {
+    public void testUpdate() throws SQLException, CatnapException, InvocationTargetException, IllegalAccessException, NoSuchMethodException {
         MockModel model = new MockModel(1, "mock");
 
         when(mappingStrategy.update(model)).thenReturn("");
@@ -260,7 +262,7 @@ public class SessionTest {
     }
 
     @Test
-    public void testUpdateSQLEXception() throws SQLException {
+    public void testUpdateSQLEXception() throws SQLException, CatnapException, InvocationTargetException, IllegalAccessException, NoSuchMethodException {
         MockModel model = new MockModel(1, "mock");
 
         when(mappingStrategy.update(model)).thenReturn("");
@@ -272,5 +274,41 @@ public class SessionTest {
         });
 
         verify(cache, times(0)).store(Mockito.any(CatnapResult.class));
+    }
+
+    @Test
+    public void testBeginTransaction() throws CatnapException, SQLException {
+        this.session.beginTransaction();
+        verify(this.connection, times(1)).setAutoCommit(false);
+    }
+
+    @Test
+    public void testBeginTransactionSQLException() throws SQLException {
+        doThrow(SQLException.class).when(this.connection).setAutoCommit(false);
+        assertThrows(CatnapException.class, () -> this.session.beginTransaction());
+    }
+
+    @Test
+    public void testCommit() throws SQLException, RollbackException {
+        this.session.commit();
+        verify(this.connection, times(1)).commit();
+    }
+
+    @Test
+    public void testCommitRollbackException() throws SQLException {
+        doThrow(SQLException.class).when(this.connection).commit();
+        assertThrows(RollbackException.class, () -> this.session.commit());
+    }
+
+    @Test
+    public void testRollback() throws SQLException, CatnapException {
+        this.session.rollback();
+        verify(this.connection, times(1)).rollback();
+    }
+
+    @Test
+    public void testRollbackSQLException() throws SQLException {
+        doThrow(SQLException.class).when(this.connection).rollback();
+        assertThrows(CatnapException.class, () -> this.session.rollback());
     }
 }
