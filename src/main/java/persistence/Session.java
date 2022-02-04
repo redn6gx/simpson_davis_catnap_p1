@@ -31,13 +31,15 @@ public class Session implements EntityManager {
     private final Connection connection;
     private final MappingStrategy mappingStrategy;
     private final CatnapCache cache;
+    private final SessionFactory factory;
 
     private final static Logger logger = LogManager.getLogger(Session.class);
 
-    public Session(Connection connection, MappingStrategy mappingStrategy, CatnapCache cache) {
+    public Session(Connection connection, MappingStrategy mappingStrategy, CatnapCache cache, SessionFactory factory) {
         this.connection = connection;
         this.mappingStrategy = mappingStrategy;
         this.cache = cache;
+        this.factory = factory;
     }
 
     /**
@@ -298,12 +300,10 @@ public class Session implements EntityManager {
 
     /**
      * This method releases the connection this EntityManager was using
-     *
-     * @throws CatnapException     thrown when the SessionFactory hasn't been built yet
      */
     @Override
-    public void close() throws CatnapException {
-        SessionFactory.getInstance().releaseConnection(this.connection);
+    public void close() {
+        factory.releaseConnection(this.connection);
     }
 
     /**
