@@ -1,6 +1,7 @@
 package persistence;
 
 import exceptions.CatnapException;
+import exceptions.RollbackException;
 import models.MockModel;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -273,5 +274,41 @@ public class SessionTest {
         });
 
         verify(cache, times(0)).store(Mockito.any(CatnapResult.class));
+    }
+
+    @Test
+    public void testBeginTransaction() throws CatnapException, SQLException {
+        this.session.beginTransaction();
+        verify(this.connection, times(1)).setAutoCommit(false);
+    }
+
+    @Test
+    public void testBeginTransactionSQLException() throws SQLException {
+        doThrow(SQLException.class).when(this.connection).setAutoCommit(false);
+        assertThrows(CatnapException.class, () -> this.session.beginTransaction());
+    }
+
+    @Test
+    public void testCommit() throws SQLException, RollbackException {
+        this.session.commit();
+        verify(this.connection, times(1)).commit();
+    }
+
+    @Test
+    public void testCommitRollbackException() throws SQLException {
+        doThrow(SQLException.class).when(this.connection).commit();
+        assertThrows(RollbackException.class, () -> this.session.commit());
+    }
+
+    @Test
+    public void testRollback() throws SQLException, CatnapException {
+        this.session.rollback();
+        verify(this.connection, times(1)).rollback();
+    }
+
+    @Test
+    public void testRollbackSQLException() throws SQLException {
+        doThrow(SQLException.class).when(this.connection).rollback();
+        assertThrows(CatnapException.class, () -> this.session.rollback());
     }
 }
