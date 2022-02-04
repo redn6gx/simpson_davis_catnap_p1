@@ -5,7 +5,7 @@ import exceptions.ConnectionFailedException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
-public interface MappingStrategy<T> {
+public interface MappingStrategy {
     /**
      * This method is used to add a model to the list of objects that will be added to the
      * database schema.

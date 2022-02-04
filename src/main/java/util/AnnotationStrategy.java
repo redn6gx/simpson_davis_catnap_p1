@@ -21,7 +21,7 @@ import java.util.*;
  * generate queries that will be added to prepared statements.
  * For more detailed method descriptions see MappingStrategy Interface.
  */
-public class AnnotationStrategy<T> implements MappingStrategy<T>{
+public class AnnotationStrategy implements MappingStrategy{
     private final static Logger logger = LogManager.getLogger(AnnotationStrategy.class);
     private static List<Object> models = new ArrayList<>();
 

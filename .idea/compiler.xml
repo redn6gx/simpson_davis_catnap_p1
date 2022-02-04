@@ -7,6 +7,7 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="simpson_davis_catnap_p1" />
+        <module name="catnap" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>

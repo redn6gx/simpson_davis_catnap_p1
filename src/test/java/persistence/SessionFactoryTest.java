@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class SessionFactoryTest {
 
-    public class MockMappingStrategy<T> implements MappingStrategy<T> {
+    public class MockMappingStrategy implements MappingStrategy {
         @Override
         public String get(Class clazz, int id) {
             return null;
