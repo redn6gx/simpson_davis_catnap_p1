@@ -1,5 +1,6 @@
 package persistence;
 
+import exceptions.CatnapException;
 import exceptions.ConnectionFailedException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -10,8 +11,12 @@ import util.ConnectionPool;
 import util.MappingStrategy;
 
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class SessionFactoryTest {
@@ -24,6 +29,12 @@ public class SessionFactoryTest {
 
     @Mock
     private MappingStrategy mockMappingStrategy;
+
+    @Mock
+    private Connection connection;
+
+    @Mock
+    private PreparedStatement statement;
 
     @Test
     public void testCreateEntityManager() throws ConnectionFailedException {
@@ -59,5 +70,26 @@ public class SessionFactoryTest {
         EntityManager session2 = factory.getSessionContext(id);
 
         assertEquals(session, session2);
+    }
+
+    @Test
+    public void testBuild() throws SQLException, ConnectionFailedException, CatnapException {
+
+        when(mockConnectionPool.getConnection()).thenReturn(connection);
+        when(connection.prepareStatement("")).thenReturn(statement);
+
+        factory.build("");
+
+        verify(statement, times(1)).executeUpdate();
+    }
+
+    @Test
+    public void testBuildSQLException() throws SQLException, ConnectionFailedException {
+
+        when(mockConnectionPool.getConnection()).thenReturn(connection);
+        when(connection.prepareStatement("")).thenReturn(statement);
+        when(statement.executeUpdate()).thenThrow(SQLException.class);
+
+        assertThrows(CatnapException.class, () -> factory.build(""));
     }
 }
