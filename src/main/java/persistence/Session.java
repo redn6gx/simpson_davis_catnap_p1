@@ -215,7 +215,7 @@ public class Session implements EntityManager {
             cache.store(wrappedEntity);
 
         } catch (SQLException e) {
-            String s = "There was an error performing a select on the database for entity type: " + wrappedEntity.getEntityType().getName() + ", error message:" + e.getMessage();
+            String s = "There was an error performing an insert on the database for entity type: " + wrappedEntity.getEntityType().getName() + ", error message:" + e.getMessage();
             logger.error(s);
             throw new CatnapException(s);
         }
