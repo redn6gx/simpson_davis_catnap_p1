@@ -180,7 +180,7 @@ public class AnnotationStrategy implements MappingStrategy{
                 pkFieldName = f.getName();
             }
         }
-        query.append(pkFieldName + " = " + id + " RETURNING *;");
+        query.append(pkFieldName + " = " + id + ";");
 
         return String.valueOf(query);
     }

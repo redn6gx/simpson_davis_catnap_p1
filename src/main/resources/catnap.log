@@ -176,3 +176,47 @@ ERROR | 2022-02-06 02:54:24 | [main] persistence.Session (Session.java:251) - Th
 ERROR | 2022-02-06 02:54:24 | [main] persistence.Session (Session.java:296) - There was an error when trying to rollback a transaction. Got: null
 ERROR | 2022-02-06 02:54:24 | [main] persistence.Session (Session.java:133) - There was an error performing a select on the database for entity type: models.MockModel, error message:null
 ERROR | 2022-02-06 02:54:24 | [main] util.SimpleConnectionPool (SimpleConnectionPool.java:58) - SQL Exception when trying to connect to database, got the following message: No suitable driver found for 
+ERROR | 2022-02-06 03:19:05 | [main] persistence.Session (Session.java:219) - There was an error performing a select on the database for entity type: models.MockModel, error message:null
+ERROR | 2022-02-06 03:19:05 | [main] persistence.Session (Session.java:93) - There was an error when trying to move the cursor in the ResultSet for entitymodels.MockModel. Got error: null
+ERROR | 2022-02-06 03:19:05 | [main] persistence.Session (Session.java:266) - There was an error when trying to start a transaction. Got: null
+ERROR | 2022-02-06 03:19:05 | [main] persistence.Session (Session.java:281) - There was an error when trying to commit a transaction. Got: null
+ERROR | 2022-02-06 03:19:05 | [main] persistence.Session (Session.java:143) - There was an error when trying to move the cursor in the ResultSet for entitymodels.MockModel. Got error: null
+ERROR | 2022-02-06 03:19:05 | [main] persistence.Session (Session.java:187) - There was an error performing a select on the database for entity type: models.MockModel, error message:null
+ERROR | 2022-02-06 03:19:05 | [main] persistence.Session (Session.java:83) - There was an error performing a select on the database for entity type: models.MockModel, error message:null
+ERROR | 2022-02-06 03:19:05 | [main] persistence.Session (Session.java:251) - There was an error performing a select on the database for entity type: models.MockModel, error message:null
+ERROR | 2022-02-06 03:19:05 | [main] persistence.Session (Session.java:296) - There was an error when trying to rollback a transaction. Got: null
+ERROR | 2022-02-06 03:19:05 | [main] persistence.Session (Session.java:133) - There was an error performing a select on the database for entity type: models.MockModel, error message:null
+ERROR | 2022-02-06 03:19:05 | [main] util.SimpleConnectionPool (SimpleConnectionPool.java:58) - SQL Exception when trying to connect to database, got the following message: No suitable driver found for 
+ERROR | 2022-02-06 03:19:14 | [main] persistence.Session (Session.java:219) - There was an error performing a select on the database for entity type: models.MockModel, error message:null
+ERROR | 2022-02-06 03:19:14 | [main] persistence.Session (Session.java:93) - There was an error when trying to move the cursor in the ResultSet for entitymodels.MockModel. Got error: null
+ERROR | 2022-02-06 03:19:14 | [main] persistence.Session (Session.java:266) - There was an error when trying to start a transaction. Got: null
+ERROR | 2022-02-06 03:19:14 | [main] persistence.Session (Session.java:281) - There was an error when trying to commit a transaction. Got: null
+ERROR | 2022-02-06 03:19:14 | [main] persistence.Session (Session.java:143) - There was an error when trying to move the cursor in the ResultSet for entitymodels.MockModel. Got error: null
+ERROR | 2022-02-06 03:19:14 | [main] persistence.Session (Session.java:187) - There was an error performing a select on the database for entity type: models.MockModel, error message:null
+ERROR | 2022-02-06 03:19:14 | [main] persistence.Session (Session.java:83) - There was an error performing a select on the database for entity type: models.MockModel, error message:null
+ERROR | 2022-02-06 03:19:14 | [main] persistence.Session (Session.java:251) - There was an error performing a select on the database for entity type: models.MockModel, error message:null
+ERROR | 2022-02-06 03:19:14 | [main] persistence.Session (Session.java:296) - There was an error when trying to rollback a transaction. Got: null
+ERROR | 2022-02-06 03:19:14 | [main] persistence.Session (Session.java:133) - There was an error performing a select on the database for entity type: models.MockModel, error message:null
+ERROR | 2022-02-06 03:19:14 | [main] util.SimpleConnectionPool (SimpleConnectionPool.java:58) - SQL Exception when trying to connect to database, got the following message: No suitable driver found for 
+ERROR | 2022-02-06 03:19:23 | [main] persistence.Session (Session.java:219) - There was an error performing a select on the database for entity type: models.MockModel, error message:null
+ERROR | 2022-02-06 03:19:23 | [main] persistence.Session (Session.java:93) - There was an error when trying to move the cursor in the ResultSet for entitymodels.MockModel. Got error: null
+ERROR | 2022-02-06 03:19:23 | [main] persistence.Session (Session.java:266) - There was an error when trying to start a transaction. Got: null
+ERROR | 2022-02-06 03:19:23 | [main] persistence.Session (Session.java:281) - There was an error when trying to commit a transaction. Got: null
+ERROR | 2022-02-06 03:19:23 | [main] persistence.Session (Session.java:143) - There was an error when trying to move the cursor in the ResultSet for entitymodels.MockModel. Got error: null
+ERROR | 2022-02-06 03:19:23 | [main] persistence.Session (Session.java:187) - There was an error performing a select on the database for entity type: models.MockModel, error message:null
+ERROR | 2022-02-06 03:19:23 | [main] persistence.Session (Session.java:83) - There was an error performing a select on the database for entity type: models.MockModel, error message:null
+ERROR | 2022-02-06 03:19:23 | [main] persistence.Session (Session.java:251) - There was an error performing a select on the database for entity type: models.MockModel, error message:null
+ERROR | 2022-02-06 03:19:23 | [main] persistence.Session (Session.java:296) - There was an error when trying to rollback a transaction. Got: null
+ERROR | 2022-02-06 03:19:23 | [main] persistence.Session (Session.java:133) - There was an error performing a select on the database for entity type: models.MockModel, error message:null
+ERROR | 2022-02-06 03:19:23 | [main] util.SimpleConnectionPool (SimpleConnectionPool.java:58) - SQL Exception when trying to connect to database, got the following message: No suitable driver found for 
+ERROR | 2022-02-06 03:19:33 | [main] persistence.Session (Session.java:219) - There was an error performing a select on the database for entity type: models.MockModel, error message:null
+ERROR | 2022-02-06 03:19:33 | [main] persistence.Session (Session.java:93) - There was an error when trying to move the cursor in the ResultSet for entitymodels.MockModel. Got error: null
+ERROR | 2022-02-06 03:19:33 | [main] persistence.Session (Session.java:266) - There was an error when trying to start a transaction. Got: null
+ERROR | 2022-02-06 03:19:33 | [main] persistence.Session (Session.java:281) - There was an error when trying to commit a transaction. Got: null
+ERROR | 2022-02-06 03:19:33 | [main] persistence.Session (Session.java:143) - There was an error when trying to move the cursor in the ResultSet for entitymodels.MockModel. Got error: null
+ERROR | 2022-02-06 03:19:33 | [main] persistence.Session (Session.java:187) - There was an error performing a select on the database for entity type: models.MockModel, error message:null
+ERROR | 2022-02-06 03:19:33 | [main] persistence.Session (Session.java:83) - There was an error performing a select on the database for entity type: models.MockModel, error message:null
+ERROR | 2022-02-06 03:19:33 | [main] persistence.Session (Session.java:251) - There was an error performing a select on the database for entity type: models.MockModel, error message:null
+ERROR | 2022-02-06 03:19:33 | [main] persistence.Session (Session.java:296) - There was an error when trying to rollback a transaction. Got: null
+ERROR | 2022-02-06 03:19:33 | [main] persistence.Session (Session.java:133) - There was an error performing a select on the database for entity type: models.MockModel, error message:null
+ERROR | 2022-02-06 03:19:33 | [main] util.SimpleConnectionPool (SimpleConnectionPool.java:58) - SQL Exception when trying to connect to database, got the following message: No suitable driver found for 
