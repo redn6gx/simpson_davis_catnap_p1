@@ -1,11 +1,14 @@
 package persistence;
 
+import exceptions.CatnapException;
 import exceptions.ConnectionFailedException;
 import util.ConnectionPool;
 import util.CatnapCache;
 import util.MappingStrategy;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,6 +28,27 @@ public class SessionFactory implements EntityManagerFactory {
         this.connectionPool = connectionPool;
         this.mappingStrategy = mappingStrategy;
         this.entityManagerMap = new HashMap<>();
+    }
+
+    /**
+     * This method is used to initialize the factory and create the tables in the database.
+     *
+     * @param schema                      the sql of the schema
+     * @throws ConnectionFailedException  thrown when the ConnectionPool fails to connect to the database
+     * @throws CatnapException            thrown when the table creation fails
+     */
+    public void build(String schema) throws ConnectionFailedException, CatnapException {
+        connectionPool.connect();
+
+        Connection conn = connectionPool.getConnection();
+
+        try {
+            PreparedStatement creationQuery = conn.prepareStatement(schema);
+            creationQuery.executeUpdate();
+        } catch (SQLException e) {
+            String s = "Tried to create tables in database but failed! Got: " + e.getMessage();
+            throw new CatnapException(s);
+        }
     }
 
     /**
