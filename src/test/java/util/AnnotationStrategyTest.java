@@ -86,7 +86,7 @@ public class AnnotationStrategyTest {
         String result = aS.update(animal);
 
         assertEquals("UPDATE Animals SET fur = true, scales = false, eyeColor = 'blue', numOfTeeth = 26," +
-                " numOfLegs = 4, weight = 212.07, weight2 = 160.12 WHERE animalId = 12345 RETURNING *;", result );
+                " numOfLegs = 4, weight = 212.07, weight2 = 160.12 WHERE animalId = 12345;", result );
     }
     @Test
     public void testGetAll() throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
