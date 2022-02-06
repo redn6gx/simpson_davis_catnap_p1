@@ -183,7 +183,7 @@ public class Session implements EntityManager {
             cache.remove(wrappedEntity);
 
         } catch (SQLException e) {
-            String s = "There was an error performing a select on the database for entity type: " + wrappedEntity.getEntityType().getName() + ", error message:" + e.getMessage();
+            String s = "There was an error performing a delete on the database for entity type: " + wrappedEntity.getEntityType().getName() + ", error message:" + e.getMessage();
             logger.error(s);
             throw new CatnapException(s);
         }
@@ -247,7 +247,7 @@ public class Session implements EntityManager {
             cache.store(wrappedEntity);
 
         } catch (SQLException e) {
-            String s = "There was an error performing a select on the database for entity type: " + wrappedEntity.getEntityType().getName() + ", error message:" + e.getMessage();
+            String s = "There was an error performing a update on the database for entity type: " + wrappedEntity.getEntityType().getName() + ", error message:" + e.getMessage();
             logger.error(s);
             throw new CatnapException(s);
         }
