@@ -82,7 +82,7 @@ public class AnnotationStrategy implements MappingStrategy{
             }
             count++;
         }
-        query.append(") RETURNING *;");
+        query.append(");");
 
         return String.valueOf(query);
     }
@@ -95,6 +95,7 @@ public class AnnotationStrategy implements MappingStrategy{
         Field[] fields = clazz.getFields();
         String pkFieldName = null;
         for(Field f : fields) {
+            f.setAccessible(true);
             if (f.isAnnotationPresent(Id.class)) {
                 pkFieldName = f.getName();
             }

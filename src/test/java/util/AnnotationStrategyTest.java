@@ -66,8 +66,8 @@ public class AnnotationStrategyTest {
                 "  eyeColor VARCHAR(50),\n" +
                 "  numOfTeeth INTEGER,\n" +
                 "  numOfLegs INTEGER,\n" +
-                "  weight DECIMAL(10,2),\n" +
-                "  weight2 DECIMAL(10,2),\n" +
+                "  weight float8,\n" +
+                "  weight2 float8,\n" +
                 "  primary key (animalId)\n" +
                 ");", result);
     }
@@ -77,7 +77,7 @@ public class AnnotationStrategyTest {
         Animal animal = new Animal();
         String result = aS.insert(animal);
 
-        assertEquals("INSERT INTO Animals VALUES (default, true, false, 'blue', 26, 4, 212.07, 160.12) RETURNING *;", result);
+        assertEquals("INSERT INTO Animals VALUES (default, true, false, 'blue', 26, 4, 212.07, 160.12);", result);
     }
     @Test
     public void testUpdate() throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
@@ -124,13 +124,13 @@ public class AnnotationStrategyTest {
                 "  eyeColor VARCHAR(50),\n" +
                 "  numOfTeeth INTEGER,\n" +
                 "  numOfLegs INTEGER,\n" +
-                "  weight DECIMAL(10,2),\n" +
-                "  weight2 DECIMAL(10,2),\n" +
+                "  weight float8,\n" +
+                "  weight2 float8,\n" +
                 "  primary key (animalId)\n" +
                 ");CREATE TABLE Car (\n" +
                 "  carId serial,\n" +
                 "  paintColor VARCHAR(50),\n" +
-                "  weight DECIMAL(10,2),\n" +
+                "  weight float8,\n" +
                 "  horsePower INTEGER,\n" +
                 "  primary key (carId)\n" +
                 ");", result);
