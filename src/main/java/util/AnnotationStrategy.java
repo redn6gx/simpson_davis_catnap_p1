@@ -82,7 +82,7 @@ public class AnnotationStrategy implements MappingStrategy{
             }
             count++;
         }
-        query.append(") RETURNING *;");
+        query.append(");");
 
         return String.valueOf(query);
     }
@@ -95,6 +95,7 @@ public class AnnotationStrategy implements MappingStrategy{
         Field[] fields = clazz.getFields();
         String pkFieldName = null;
         for(Field f : fields) {
+            f.setAccessible(true);
             if (f.isAnnotationPresent(Id.class)) {
                 pkFieldName = f.getName();
             }
@@ -162,7 +163,7 @@ public class AnnotationStrategy implements MappingStrategy{
             }
             count++;
         }
-        query.append(pkFieldName + " = " + pkValue + " RETURNING *;");
+        query.append(pkFieldName + " = " + pkValue + ";");
 
         return String.valueOf(query);
     }
@@ -179,7 +180,7 @@ public class AnnotationStrategy implements MappingStrategy{
                 pkFieldName = f.getName();
             }
         }
-        query.append(pkFieldName + " = " + id + " RETURNING *;");
+        query.append(pkFieldName + " = " + id + ";");
 
         return String.valueOf(query);
     }
