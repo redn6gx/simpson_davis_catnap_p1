@@ -13,6 +13,7 @@ Catnap is a Custom ORM inspired by Hibernate. It makes use of annotation based m
  * Mockito JUnit - Version 4.3.1
  * Log4j - Version 2.14.1
  * Java Servlet API - 4.0.1
+ * Custom Web Application LetSleepingCatsLie - found at https://github.com/redn6gx/simpson_davis_let_sleeping_cats_lie/tree/main
 
 ## Features
 ---
