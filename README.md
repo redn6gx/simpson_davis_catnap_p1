@@ -1,44 +1,65 @@
 # Catnap
+---
 
-Simple JPA compliant ORM for Java.
+## Description
+---
+Catnap is a Custom ORM inspired by Hibernate. It makes use of annotation based model configuration to map entities in the database to declared models in a web application. There is a mapping.properties file that is required to map Java types to PostgreSQL types, allowing the user to customize what types they want mapped. Catnap also has support for a session based cache as well as connection pooling.
 
-## Class Structure
+## Technologies Used
 
-The following is a list of the classes used within the framework:
+ * PostgreSQL JDBC Driver - Version 42.3.1
+ * JUnit - Version 5.8.2
+ * Mockito - Version 4.2.0
+ * Mockito JUnit - Version 4.3.1
+ * Log4j - Version 2.14.1
+ * Java Servlet API - 4.0.1
 
- - Session (implements EntityManager)
- - SessionFactory (implements EntityManagerFactory)
- - Cache
- - Transaction (implements EntityTransaction)
- - ConnectionPool
- - MappingStrategy (should have an interface)
+## Features
+---
+Completed feature list:
+ * Annotation support for primary keys, field ordering, String length restrictions, and entity table names
+ * Session based caching
+ * Connection Pooling
+ * Basic transaction support (begin, commit, and rollback)
 
-### Session
-This object is used to perform CRUD operations on the database by a service. In Hibernate's
-terminology this object is the "persistence context".
+To-dos:
+ * Entity relationships: OneToOne, OneToMany, etc.
+ * Column names
+ * Transaction savepoints
 
-### SessionFactory
-This object is used to obtain instances of the Session object and manages all persistence contexts
-within the application. This is what Hibernate calls the "persistence unit".
 
-### Cache
-This object is used to cache results obtained from the database. If we are doing an l1 type
-cache than the Session object holds a reference to it. For l2 the SessionFactory would.
+## Getting Started
+---
+First clone this repository's main branch using:
+```
+git clone https://github.com/redn6gx/simpson_davis_catnap_p1.git
+```
+then navigate to the project folder and run maven package:
+```
+mvn package
+```
+Once you have the jar filed you're free to use it in your web application! Make sure to use a maven local repository and add the following to your maven dependencies:
+```
+<dependency>
+    <groupId>com.revature</groupId>
+    <artifactId>catnap</artifactId>
+    <version>1.0-SNAPSHOT</version>
+</dependency>
+```
 
-### Transaction
-This object represents a single unit of work to be done by the database. Transactions objects
-are created and maintained by the Session object. As a service makes calls to the Criteria API
-of the Session it makes a record of the database operations that need performing in the Transaction,
-and then the Transaction is committed.
+## Usage
+---
+To use Catnap you need to instantiated ```SessionFactory``` in your application start up process. It takes ```ConnectionPool``` and ```MappingStrategy``` as arguments, so you instantiate those two first (supplying the former with your database credentials) and then pass them into the constructor of ```SessionFactory```. From there your database manipulating objects can call ```getSessionContext``` on the ```SessionFactory```, passing in the web session id (such as from ```HttpSession```'s ```getId``` method) and it will return a ```Session``` instance that can be used to perform database operations. ```Session``` supports the following operations:
+ * ```persist```: save the entity to the database
+ * ```update```: update the entity in the database
+ * ```delete```: delete an entity from the database
+ * ```get```: get an entity from the database
+ * ```getAll```: get all entities from a single table
+ * ```beginTransaction```: begin a transaction
+ * ```commit```: commit a transaction
+ * ```rollback```: rollback a transaction
 
-### ConnectionPool
-This object manages a list of used and free JDBC connection objects that are given to
-Session objects during runtime. 
-
-### MappingStrategy
-This object performs the logic of looking up annotations in domain models and mapping
-them to database schema.
-
-#### Notes
-
-Refactor exceptions 
+## Contributors
+---
+ * Richard Simpson - https://github.com/RichardSimpson235
+ * Robert Davis - https://github.com/redn6gx
